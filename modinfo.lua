@@ -15,16 +15,17 @@ local onof_en = {
 local LANGS = {
     ['zh'] = {
         name = '無群體仇恨',
-        description = '移除青蛙、皮弗婁牛、豬人、企鷗等生物的群體仇恨機制，每個生物可單獨開關，不影響玩家雇傭的生物。',
+        description = '移除青蛙、皮弗婁牛、豬人、企鷗等生物的群體仇恨機制。\n每種生物可單獨開關，不影響玩家雇傭的生物。\n注意：不會改變生物的主動仇恨範圍，因此對於索敵範圍大的敵對生物效果可能較不明顯，例如殺人蜂、魚人、豬人守衛。',
         config = {
             { modid .. '_frog', '青蛙', '包含明眼青蛙', true, onof_zh },
-            { modid .. '_bee', '蜜蜂', '不含殺人蜂', true, onof_zh },
-            { modid .. '_spider', '蜘蛛', '', true, onof_zh },
+            { modid .. '_bee', '蜜蜂', '包含殺人蜂，不含嗡嗡蜜蜂', true, onof_zh },
+            { modid .. '_spider', '蜘蛛', '包含各種蜘蛛', true, onof_zh },
             { modid .. '_beefalo', '皮弗婁牛', '包含小皮弗婁牛', true, onof_zh },
             { modid .. '_pigman', '豬人', '包含豬人守衛和瘋豬，不含面具豬人', true, onof_zh },
-            { modid .. '_bunnyman', '兔人', '不含面具兔人', true, onof_zh },
+            { modid .. '_bunnyman', '兔人', '不含舒适兔人、皇家兔子警卫和面具兔人', true, onof_zh },
             { modid .. '_merm', '魚人', '包含魚人守衛，不含面具魚人', true, onof_zh },
             { modid .. '_penguin', '企鷗', '包含永冻企鸥', true, onof_zh },
+            { modid .. '_otter', '水獭掠夺者', '', true, onof_zh },
             { modid .. '_rocky', '石蝦', '不含面具石蝦', true, onof_zh },
         }
     },

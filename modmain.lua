@@ -36,6 +36,34 @@ if GetModConfigData(modid .. "_frog") then
     AddPrefabPostInit("lunarfrog", RemoveGroupAggro)
 end
 
+if GetModConfigData(modid .. "_bee") then
+    local function DisableBeeHerdAggro(inst)
+        if not TheWorld.ismastersim then return end
+
+        -- 移除原本會觸發群體仇恨的事件回調
+        inst:RemoveAllEventCallbacks("attacked")
+        inst:RemoveAllEventCallbacks("worked")
+
+        -- 重新綁定單體反擊邏輯（完全不呼叫 ShareTarget 也不通知蜂箱）
+        local function SafeOnAttacked(self_inst, data)
+            local attacker = data and data.attacker
+            if attacker and self_inst.components.combat then
+                self_inst.components.combat:SetTarget(attacker)
+            end
+        end
+
+        local function SafeOnWorked(self_inst, data)
+            SafeOnAttacked(self_inst, { attacker = data.worker })
+        end
+
+        inst:ListenForEvent("attacked", SafeOnAttacked)
+        inst:ListenForEvent("worked", SafeOnWorked)
+    end
+
+    AddPrefabPostInit("bee", DisableBeeHerdAggro)
+    AddPrefabPostInit("killerbee", DisableBeeHerdAggro)
+end
+
 if GetModConfigData(modid .. "_beefalo") then
     AddPrefabPostInit("beefalo", RemoveGroupAggro)
     AddPrefabPostInit("babybeefalo", RemoveGroupAggro)
