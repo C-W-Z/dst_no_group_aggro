@@ -118,3 +118,7 @@ if GetModConfigData(modid .. "_penguin") then
     AddPrefabPostInit("penguin", SafeRemovePenguinHerdAggro)
     AddPrefabPostInit("mutated_penguin", SafeRemovePenguinHerdAggro)
 end
+
+if GetModConfigData(modid .. "_rocky") then
+    AddPrefabPostInit("rocky", RemoveGroupAggro)
+end

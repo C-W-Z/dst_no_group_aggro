@@ -18,15 +18,18 @@ local LANGS = {
         description = '移除青蛙、皮弗婁牛、豬人、企鷗等生物的群體仇恨機制，每個生物可單獨開關，不影響玩家雇傭的生物。',
         config = {
             { modid .. '_frog', '青蛙', '包含明眼青蛙', true, onof_zh },
+            { modid .. '_bee', '蜜蜂', '不含殺人蜂', true, onof_zh },
+            { modid .. '_spider', '蜘蛛', '', true, onof_zh },
             { modid .. '_beefalo', '皮弗婁牛', '包含小皮弗婁牛', true, onof_zh },
             { modid .. '_pigman', '豬人', '包含豬人守衛和瘋豬，不含面具豬人', true, onof_zh },
             { modid .. '_bunnyman', '兔人', '不含面具兔人', true, onof_zh },
             { modid .. '_merm', '魚人', '包含魚人守衛，不含面具魚人', true, onof_zh },
             { modid .. '_penguin', '企鷗', '包含永冻企鸥', true, onof_zh },
+            { modid .. '_rocky', '石蝦', '不含面具石蝦', true, onof_zh },
         }
     },
     ['en'] = {
-        name = "Extra Circular Lunar Island",
+        name = "No Group Aggro",
         description =
         "Remove the group hatred mechanism from creatures such as frogs, beefalo, pigmen, and penguins; each creature can be individually toggled on/off.",
         config = {
