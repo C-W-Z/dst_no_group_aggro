@@ -5,9 +5,7 @@ local modid = 'no_group_aggro' -- 定义唯一modid
 
 ---@param inst ent
 local function RemoveGroupAggro(inst)
-    if not TheWorld.ismastersim then
-        return
-    end
+    if not TheWorld.ismastersim then return end
 
     if inst.components.combat then
         local old_ShareTarget = inst.components.combat.ShareTarget
@@ -51,6 +49,23 @@ end
 
 if GetModConfigData(modid .. "_bunnyman") then
     AddPrefabPostInit("bunnyman", RemoveGroupAggro)
+end
+
+if GetModConfigData(modid .. "_merm") then
+    AddPrefabPostInit("merm", RemoveGroupAggro)
+    AddPrefabPostInit("mermguard", RemoveGroupAggro)
+    -- AddPrefabPostInit("merm_shadow", RemoveGroupAggro)
+    -- AddPrefabPostInit("mermguard_shadow", RemoveGroupAggro)
+    -- AddPrefabPostInit("merm_lunar", RemoveGroupAggro)
+    -- AddPrefabPostInit("mermguard_lunar", RemoveGroupAggro)
+    AddPrefabPostInit("mermking", function(inst)
+        if not TheWorld.ismastersim then return end
+        if inst.components.combat then
+            inst.components.combat.ShareTarget = function()
+                -- Do nothing，魚人王不再向周圍廣播仇恨，但還是會召喚4隻專屬護衛
+            end
+        end
+    end)
 end
 
 if GetModConfigData(modid .. "_penguin") then

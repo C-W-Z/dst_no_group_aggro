@@ -21,6 +21,7 @@ local LANGS = {
             { modid .. '_beefalo', '皮弗婁牛', '包含小皮弗婁牛', true, onof_zh },
             { modid .. '_pigman', '豬人', '包含豬人守衛和瘋豬，不含面具豬人', true, onof_zh },
             { modid .. '_bunnyman', '兔人', '不含面具兔人', true, onof_zh },
+            { modid .. '_merm', '魚人', '包含魚人守衛，不含面具魚人', true, onof_zh },
             { modid .. '_penguin', '企鷗', '包含永冻企鸥', true, onof_zh },
         }
     },
