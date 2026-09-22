@@ -1,0 +1,105 @@
+GLOBAL.setmetatable(env, { __index = function(t, k) return GLOBAL.rawget(GLOBAL, k) end })
+
+---@type string
+local modid = 'no_group_aggro' -- 定义唯一modid
+
+---@param inst ent
+local function RemoveGroupAggro(inst)
+    if not TheWorld.ismastersim then
+        return
+    end
+
+    if inst.components.combat then
+        local old_ShareTarget = inst.components.combat.ShareTarget
+
+        inst.components.combat.ShareTarget = function(self_inst, target, range, fn, maxnum, musttags)
+            if not self_inst.inst or not self_inst.inst:IsValid() then
+                return
+            end
+
+            -- 如果是玩家招募的隨從，保留仇恨聯動
+            if self_inst.inst.components.follower and self_inst.inst.components.follower.leader ~= nil then
+                return old_ShareTarget(self_inst, target, range, fn, maxnum, musttags)
+            end
+
+            -- 如果是面具生物，保留其群體機制
+            if self_inst.inst:HasTag("shadowthrall_parasite_hosted") then
+                return old_ShareTarget(self_inst, target, range, fn, maxnum, musttags)
+            end
+
+            -- 其他情況直接阻斷，不呼叫原本的 ShareTarget
+            return
+        end
+    end
+end
+
+if GetModConfigData(modid .. "_frog") then
+    AddPrefabPostInit("frog", RemoveGroupAggro)
+    AddPrefabPostInit("lunarfrog", RemoveGroupAggro)
+end
+
+if GetModConfigData(modid .. "_beefalo") then
+    AddPrefabPostInit("beefalo", RemoveGroupAggro)
+    AddPrefabPostInit("babybeefalo", RemoveGroupAggro)
+end
+
+if GetModConfigData(modid .. "_pigman") then
+    AddPrefabPostInit("pigman", RemoveGroupAggro)
+    AddPrefabPostInit("pigguard", RemoveGroupAggro)
+    AddPrefabPostInit("moonpig", RemoveGroupAggro)
+end
+
+if GetModConfigData(modid .. "_bunnyman") then
+    AddPrefabPostInit("bunnyman", RemoveGroupAggro)
+end
+
+if GetModConfigData(modid .. "_penguin") then
+    -- 重寫企鵝的防呆單體索敵邏輯
+    local function PenguinSafeRetarget(inst)
+        if inst.components.hunger and not inst.components.hunger:IsStarving() then
+            return nil
+        end
+        -- 只回傳目標，不呼叫 MakeTeam
+        return FindEntity(inst, 3, function(guy) return inst.components.combat:CanTarget(guy) end,
+            { "_combat" }, { "penguin" }, { "character", "monster", "wall" })
+    end
+
+    -- 重寫月亮企鵝的單體索敵邏輯
+    local function MutatedPenguinSafeRetarget(inst)
+        return FindEntity(inst, 4, function(guy) return inst.components.combat:CanTarget(guy) end,
+            { "_combat" }, { "penguin", "mutantdominant" }, { "character", "monster", "smallcreature", "animal", "wall" })
+    end
+
+    local function SafeRemovePenguinHerdAggro(inst)
+        if not TheWorld.ismastersim then return end
+
+        if inst.components.combat then
+            -- 替換索敵函數，切斷主動組隊
+            if inst.prefab == "mutated_penguin" then
+                inst.components.combat:SetRetargetFunction(2, MutatedPenguinSafeRetarget)
+            else
+                inst.components.combat:SetRetargetFunction(3, PenguinSafeRetarget)
+            end
+
+            -- 替換維持目標邏輯，不再依賴隊長指令
+            inst.components.combat:SetKeepTargetFunction(function(self_inst, target)
+                return self_inst.components.combat:CanTarget(target)
+            end)
+        end
+
+        -- 處理受擊邏輯：移除原版帶有呼朋引伴功能的事件
+        inst:RemoveAllEventCallbacks("attacked")
+
+        -- 補回單兵作戰的受擊反應
+        inst:ListenForEvent("attacked", function(self_inst, data)
+            local attacker = data and data.attacker or nil
+            if attacker and self_inst.components.combat then
+                self_inst.components.combat:SetTarget(attacker)
+                -- 不呼叫 ShareTarget，也不使用 teamattacker
+            end
+        end)
+    end
+
+    AddPrefabPostInit("penguin", SafeRemovePenguinHerdAggro)
+    AddPrefabPostInit("mutated_penguin", SafeRemovePenguinHerdAggro)
+end
