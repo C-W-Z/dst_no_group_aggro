@@ -38,44 +38,124 @@ end
 
 local bee_type = GetModConfigData(modid .. "_bee")
 if bee_type then
-    local function DisableBeeHerdAggro(inst)
-        if not TheWorld.ismastersim then return end
+    local function CustomBeeOnAttacked(inst, data)
+        local attacker = data and data.attacker
+        if attacker and inst.components.combat then
+            inst.components.combat:SetTarget(attacker)
+        end
 
-        -- 清除原版的受擊與被網子抓的事件，切斷原版的所有連動
-        inst:RemoveAllEventCallbacks("attacked")
-        inst:RemoveAllEventCallbacks("worked")
-
-        -- 重新編寫受擊邏輯
-        ---@param self_inst ent
-        ---@param data table
-        local function SafeOnAttacked(self_inst, data)
-            local attacker = data and data.attacker
-            if attacker and self_inst.components.combat then
-                self_inst.components.combat:SetTarget(attacker)
-
-                -- 讓蜂巢釋放蜜蜂，但不傳遞仇恨 (傳入 nil)
-                -- 並根據被打的蜜蜂種類，決定出來的種類
-                if self_inst.components.homeseeker and self_inst.components.homeseeker.home then
-                    local home = self_inst.components.homeseeker.home
-                    if home and home.components.childspawner then
-                        -- 不呼叫 ShareTarget，也不傳遞 attacker
-                        home.components.childspawner:ReleaseAllChildren(nil, bee_type)
+        -- 處理蜂巢釋放邏輯
+        if inst.components.combat and inst.components.combat:HasTarget() then
+            if inst.components.homeseeker and inst.components.homeseeker.home then
+                local home = inst.components.homeseeker.home
+                if home and home.components.childspawner then
+                    if inst.prefab == "bee" then
+                        -- 根據設定決定普通蜜蜂巢穴的反應
+                        if bee_type == "bee" then
+                            home.components.childspawner:ReleaseAllChildren(nil, "bee")
+                        else
+                            home.components.childspawner:ReleaseAllChildren(attacker, "killerbee")
+                        end
+                    else
+                        -- 如果是殺人蜂 (killerbee) 被打，永遠放出帶仇恨的殺人蜂
+                        home.components.childspawner:ReleaseAllChildren(attacker, "killerbee")
                     end
                 end
             end
         end
+        -- 這裡完全不呼叫 ShareTarget，切斷外面蜜蜂的仇恨傳播
+    end
 
-        local function SafeOnWorked(self_inst, data)
-            SafeOnAttacked(self_inst, { attacker = data.worker })
+    local function CustomBeeOnWorked(inst, data)
+        CustomBeeOnAttacked(inst, { attacker = data.worker })
+    end
+
+    local function DisableBeeHerdAggro(inst)
+        if not TheWorld.ismastersim then
+            return
         end
 
-        -- 綁定新的安全事件
-        inst:ListenForEvent("attacked", SafeOnAttacked)
-        inst:ListenForEvent("worked", SafeOnWorked)
+        -- 清除原版事件
+        inst:RemoveAllEventCallbacks("attacked")
+        inst:RemoveAllEventCallbacks("worked")
+
+        -- 綁定我們自定義的事件
+        inst:ListenForEvent("attacked", CustomBeeOnAttacked)
+        inst:ListenForEvent("worked", CustomBeeOnWorked)
+
+        -- 保險起見，掏空 ShareTarget 避免其他模組或底層邏輯呼叫
+        if inst.components.combat then
+            inst.components.combat.ShareTarget = function()
+            end
+        end
     end
 
     AddPrefabPostInit("bee", DisableBeeHerdAggro)
-    -- AddPrefabPostInit("killerbee", DisableBeeHerdAggro)
+    AddPrefabPostInit("killerbee", DisableBeeHerdAggro)
+
+    -- 處理蜂巢/蜂箱本體被打、被燒、被收蜜的邏輯
+    -- 針對建築物 (蜂巢與蜂箱) 的 Patch
+    AddPrefabPostInit("beehive", function(inst)
+        if not TheWorld.ismastersim then
+            return
+        end
+
+        if inst.components.childspawner then
+            -- 備份原版的釋放函數
+            local old_ReleaseAllChildren = inst.components.childspawner.ReleaseAllChildren
+
+            -- 攔截並覆寫釋放函數
+            inst.components.childspawner.ReleaseAllChildren = function(self, target, prefab)
+                -- 這個攔截只針對 bee_type == "bee" 的設定起作用
+                -- 如果是 "killerbee"，就維持原版行為
+                if bee_type == "bee" then
+                    -- 強制將目標設為 nil，出來的蜂種強制設為 "bee"
+                    return old_ReleaseAllChildren(self, nil, "bee")
+                else
+                    -- 原版設定：交由原始函數處理 (可能帶有 target 和 "killerbee")
+                    return old_ReleaseAllChildren(self, target, prefab)
+                end
+            end
+        end
+    end)
+
+    local function SafeBeebox(inst)
+        if not TheWorld.ismastersim then
+            return
+        end
+
+        -- 處理收蜜時不釋放蜜蜂的邏輯
+        if inst.components.harvestable then
+            local old_onharvest = inst.components.harvestable.onharvestfn
+            inst.components.harvestable.onharvestfn = function(self_inst, picker, produce)
+                if self_inst.components.childspawner then
+                    -- 暫存原版函數，並在收蜜期間短暫替換為空函數
+                    local old_release = self_inst.components.childspawner.ReleaseAllChildren
+                    self_inst.components.childspawner.ReleaseAllChildren = function() end
+
+                    -- 執行原版收蜜邏輯
+                    old_onharvest(self_inst, picker, produce)
+
+                    -- 恢復原版釋放函數
+                    self_inst.components.childspawner.ReleaseAllChildren = old_release
+                else
+                    old_onharvest(self_inst, picker, produce)
+                end
+            end
+        end
+
+        -- 處理被燒等其他情況釋放但無仇恨的邏輯
+        if inst.components.childspawner then
+            local old_ReleaseAllChildren = inst.components.childspawner.ReleaseAllChildren
+            inst.components.childspawner.ReleaseAllChildren = function(self, target, prefab)
+                -- 強制清除仇恨目標，並保證出來的是普通蜜蜂
+                return old_ReleaseAllChildren(self, nil, "bee")
+            end
+        end
+    end
+
+    AddPrefabPostInit("beebox", SafeBeebox)
+    AddPrefabPostInit("beebox_hermit", SafeBeebox)
 end
 
 if GetModConfigData(modid .. "_beefalo") then
