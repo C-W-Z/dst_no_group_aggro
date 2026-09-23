@@ -3,6 +3,30 @@ GLOBAL.setmetatable(env, { __index = function(t, k) return GLOBAL.rawget(GLOBAL,
 ---@type string
 local modid = 'no_group_aggro' -- 定义唯一modid
 
+--- 輔助函式，清除特定檔案中註冊的特定event的callback
+---@param inst ent
+---@param event string
+---@param filename string
+local function RemoveVanillaEventCallback(inst, event, filename)
+    -- 確保事件表存在，且該實體有監聽自己的該事件
+    if inst.event_listeners and inst.event_listeners[event] and inst.event_listeners[event][inst] then
+        local listener_fns = inst.event_listeners[event][inst]
+
+        -- 倒序遍歷，因為呼叫 RemoveEventCallback 會改變陣列長度 (RemoveByValue)
+        for i = #listener_fns, 1, -1 do
+            local fn = listener_fns[i]
+            if type(fn) == "function" then
+                local info = debug.getinfo(fn, "S")
+                -- 透過來源路徑比對是否為官方寫在該生物 lua 檔中的函數
+                if info and info.source and string.find(info.source, filename) then
+                    -- 找到目標後，使用底層標準的 API 乾淨地移除它
+                    inst:RemoveEventCallback(event, fn)
+                end
+            end
+        end
+    end
+end
+
 ---@param inst ent
 local function RemoveGroupAggro(inst)
     if not TheWorld.ismastersim then return end
@@ -70,14 +94,14 @@ if bee_type then
         CustomBeeOnAttacked(inst, { attacker = data.worker })
     end
 
-    local function DisableBeeHerdAggro(inst)
+    local function DisableBeeGroupAggro(inst)
         if not TheWorld.ismastersim then
             return
         end
 
         -- 清除原版事件
-        inst:RemoveAllEventCallbacks("attacked")
-        inst:RemoveAllEventCallbacks("worked")
+        RemoveVanillaEventCallback(inst, "attacked", "beecommon.lua")
+        RemoveVanillaEventCallback(inst, "worked", "beecommon.lua")
 
         -- 綁定我們自定義的事件
         inst:ListenForEvent("attacked", CustomBeeOnAttacked)
@@ -90,8 +114,8 @@ if bee_type then
         end
     end
 
-    AddPrefabPostInit("bee", DisableBeeHerdAggro)
-    AddPrefabPostInit("killerbee", DisableBeeHerdAggro)
+    AddPrefabPostInit("bee", DisableBeeGroupAggro)
+    AddPrefabPostInit("killerbee", DisableBeeGroupAggro)
 
     -- 處理蜂巢/蜂箱本體被打、被燒、被收蜜的邏輯
     -- 針對建築物 (蜂巢與蜂箱) 的 Patch
@@ -207,7 +231,7 @@ if GetModConfigData(modid .. "_penguin") then
             { "_combat" }, { "penguin", "mutantdominant" }, { "character", "monster", "smallcreature", "animal", "wall" })
     end
 
-    local function SafeRemovePenguinHerdAggro(inst)
+    local function SafeRemovePenguinGroupAggro(inst)
         if not TheWorld.ismastersim then return end
 
         if inst.components.combat then
@@ -237,8 +261,8 @@ if GetModConfigData(modid .. "_penguin") then
         end)
     end
 
-    AddPrefabPostInit("penguin", SafeRemovePenguinHerdAggro)
-    AddPrefabPostInit("mutated_penguin", SafeRemovePenguinHerdAggro)
+    AddPrefabPostInit("penguin", SafeRemovePenguinGroupAggro)
+    AddPrefabPostInit("mutated_penguin", SafeRemovePenguinGroupAggro)
 end
 
 if GetModConfigData(modid .. "otter") then
@@ -251,4 +275,41 @@ end
 
 if GetModConfigData(modid .. "_rocky") then
     AddPrefabPostInit("rocky", RemoveGroupAggro)
+end
+
+if GetModConfigData(modid .. "_monkey") then
+    AddPrefabPostInit("monkey", function(inst)
+        if not TheWorld.ismastersim then return end
+
+        -- 精準移除 monkey.lua 中綁定的 attacked 事件，保留其他所有模組或組件的監聽
+        RemoveVanillaEventCallback(inst, "attacked", "monkey.lua")
+
+        -- 建立一個乾淨的單體反擊事件
+        local function SafeOnAttacked(self_inst, data)
+            local attacker = data and data.attacker
+            if attacker and self_inst.components.combat then
+                self_inst.components.combat:SetTarget(attacker)
+
+                if self_inst.harassplayer ~= nil then
+                    if self_inst._harassovertask ~= nil then
+                        self_inst._harassovertask:Cancel()
+                        self_inst._harassovertask = nil
+                    end
+                    self_inst:RemoveEventCallback("onremove", self_inst._onharassplayerremoved, self_inst.harassplayer)
+                    self_inst.harassplayer = nil
+                end
+
+                if self_inst.task ~= nil then
+                    self_inst.task:Cancel()
+                end
+
+                self_inst.task = self_inst:DoTaskInTime(math.random(55, 65), function(i)
+                    if i.components.combat then i.components.combat:SetTarget(nil) end
+                end)
+            end
+        end
+
+        -- 綁定我們安全處理過的新事件
+        inst:ListenForEvent("attacked", SafeOnAttacked)
+    end)
 end
