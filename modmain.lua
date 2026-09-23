@@ -36,19 +36,32 @@ if GetModConfigData(modid .. "_frog") then
     AddPrefabPostInit("lunarfrog", RemoveGroupAggro)
 end
 
-if GetModConfigData(modid .. "_bee") then
+local bee_type = GetModConfigData(modid .. "_bee")
+if bee_type then
     local function DisableBeeHerdAggro(inst)
         if not TheWorld.ismastersim then return end
 
-        -- 移除原本會觸發群體仇恨的事件回調
+        -- 清除原版的受擊與被網子抓的事件，切斷原版的所有連動
         inst:RemoveAllEventCallbacks("attacked")
         inst:RemoveAllEventCallbacks("worked")
 
-        -- 重新綁定單體反擊邏輯（完全不呼叫 ShareTarget 也不通知蜂箱）
+        -- 重新編寫受擊邏輯
+        ---@param self_inst ent
+        ---@param data table
         local function SafeOnAttacked(self_inst, data)
             local attacker = data and data.attacker
             if attacker and self_inst.components.combat then
                 self_inst.components.combat:SetTarget(attacker)
+
+                -- 讓蜂巢釋放蜜蜂，但不傳遞仇恨 (傳入 nil)
+                -- 並根據被打的蜜蜂種類，決定出來的種類
+                if self_inst.components.homeseeker and self_inst.components.homeseeker.home then
+                    local home = self_inst.components.homeseeker.home
+                    if home and home.components.childspawner then
+                        -- 不呼叫 ShareTarget，也不傳遞 attacker
+                        home.components.childspawner:ReleaseAllChildren(nil, bee_type)
+                    end
+                end
             end
         end
 
@@ -56,12 +69,13 @@ if GetModConfigData(modid .. "_bee") then
             SafeOnAttacked(self_inst, { attacker = data.worker })
         end
 
+        -- 綁定新的安全事件
         inst:ListenForEvent("attacked", SafeOnAttacked)
         inst:ListenForEvent("worked", SafeOnWorked)
     end
 
     AddPrefabPostInit("bee", DisableBeeHerdAggro)
-    AddPrefabPostInit("killerbee", DisableBeeHerdAggro)
+    -- AddPrefabPostInit("killerbee", DisableBeeHerdAggro)
 end
 
 if GetModConfigData(modid .. "_beefalo") then
@@ -145,6 +159,14 @@ if GetModConfigData(modid .. "_penguin") then
 
     AddPrefabPostInit("penguin", SafeRemovePenguinHerdAggro)
     AddPrefabPostInit("mutated_penguin", SafeRemovePenguinHerdAggro)
+end
+
+if GetModConfigData(modid .. "otter") then
+    AddPrefabPostInit("otter", RemoveGroupAggro)
+end
+
+if GetModConfigData(modid .. "_lightninggoat") then
+    AddPrefabPostInit("lightninggoat", RemoveGroupAggro)
 end
 
 if GetModConfigData(modid .. "_rocky") then
