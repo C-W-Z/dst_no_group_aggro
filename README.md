@@ -1,4 +1,4 @@
-# 无群体仇恨（又名关我屁事） No Group Aggro
+# 无群体仇恨（又名关我屁事）No Group Aggro (aka Not My Business)
 
 [h2]如果你喜欢我的模组，请点赞并收藏！[/h2]
 [img]https://steamuserimages-a.akamaihd.net/ugc/27680204237595119/AD467A988E9C966C580668CA6BFECE0849A48893/[/img]
@@ -34,25 +34,38 @@
 [*] 众多蜘蛛以及韦伯蜘蛛的仇恨机制正在研究中，预计下版本会加入蜘蛛相关选项
 [/list]
 
-# No Group Aggro 无群体仇恨
+# No Group Aggro (aka Not My Business) 无群体仇恨（又名关我屁事）
 
 [h2]If you like my mod, please thumbs up and favorite![/h2]
 [img]https://steamuserimages-a.akamaihd.net/ugc/27680204237595119/AD467A988E9C966C580668CA6BFECE0849A48893/[/img]
 
-[h2]Introduction[/h2]
+[h2]Mod Introduction[/h2]
+Now when creatures are attacked, their companions will just mind their own business instead of helping!
+[spoiler]In other words, you can now fight a pengull 1-vs-1![/spoiler]
+This mod removes the group aggro mechanics of creatures such as frogs, beefalos, pigmen, and pengulls. Each creature can be toggled individually, and player-hired followers are not affected.
 
-[h2][/h2]
+[h2]Supported Creatures List[/h2]
 [list]
-[*]
+[*] Bees (includes Bee Box bees, excludes Killer Bees and Bumble Bees). Features two options: 1. When bees are attacked/netted or hives are attacked/burned, hives spawn non-aggressive regular bees; 2. Hives spawn aggressive killer bees (to prevent maps without Killer Bees Plains from being unable to catch killer bees). Both options 1 and 2 make harvesting honey from bee boxes non-aggravating to bees.
+[*] Frogs, Bright-Eyed Frogs
+[*] Beefalos, Baby Beefalos
+[*] Pigmen, Guard Pigs, and Werepigs (excludes Enthralled Pigmen)
+[*] Bunnymen (excludes Cozy Bunnymen, Royal Rabbit Enforcer, and Enthralled Bunnymen)
+[*] Merms, Loyal Merm Guards (excludes Enthralled Merms)
+[*] Pengulls, Mutated Pengulls
+[*] Marotter
+[*] Charged Lightning Goats
+[*] Rock Lobsters (excludes Enthralled Rock Lobsters)
+[*] Splumonkey
 [/list]
 
 [h2]Notes[/h2]
 [list]
-[*] This mod is only active during world generation. Once the world has been successfully generated and loaded for the first time, you can safely remove this mod.
-[*] The extra Lunar Islands will spawn at random locations in the ocean, and they will not necessarily be close to the original Lunar Island.
+[*] This does not change the active aggro range of creatures. Therefore, the effect might be less noticeable for actively hostile creatures with large aggro radii (e.g., Merms, Pig Guards, Mutated Pengulls, Charged Lightning Goats) unless you use ranged weapons.
 [/list]
 
 [h2]Future Plans[/h2]
 [list]
-[*]
+[*] Remove group aggro mechanics for more creatures
+[*] Various spiders and Webber's spider aggro mechanics are currently being researched and are expected to be added in the next update
 [/list]
