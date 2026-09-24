@@ -39,6 +39,8 @@
 [*] 众多蜘蛛以及韦伯蜘蛛的仇恨机制正在研究中，预计下版本会加入蜘蛛相关选项
 [/list]
 
+[url=https://github.com/C-W-Z/dst_no_group_aggro]GitHub Repo Here[/url]
+
 # No Group Aggro (aka Not My Business) 无群体仇恨（又名关我屁事）
 
 [h2]If you like my mod, please thumbs up and favorite![/h2]
@@ -78,3 +80,5 @@ This mod removes the group aggro mechanics of creatures such as frogs, beefalos,
 [*] Remove group aggro mechanics for more creatures
 [*] Various spiders and Webber's spider aggro mechanics are currently being researched and are expected to be added in the next update
 [/list]
+
+[url=https://github.com/C-W-Z/dst_no_group_aggro]GitHub Repo Here[/url]
