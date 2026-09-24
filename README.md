@@ -3,10 +3,12 @@
 [h2]如果你喜欢我的模组，请点赞并收藏！[/h2]
 [img]https://steamuserimages-a.akamaihd.net/ugc/27680204237595119/AD467A988E9C966C580668CA6BFECE0849A48893/[/img]
 
+本模组又名：我打你同伴关你屁事，雨女无瓜！
 [h2]模组介绍[/h2]
 现在各种生物被攻击时，同伴会选择看戏而不是上前帮忙！
 [spoiler]也就是说，现在你可以和企鸥单挑了！[/spoiler]
 本模组移除了青蛙、皮弗娄牛、猪人、企鸥等生物的群体仇恨机制。每种生物可单独开关，不影响玩家雇佣的生物。
+[spoiler]其实制作这个模组是因为我玩模组时，随从常常不小心打到牛之类的群体仇恨生物导致被围殴致死[/spoiler]
 
 [h2]支援的生物列表[/h2]
 [list]
@@ -22,6 +24,9 @@
 [*] 石虾（不含面具石虾）
 [*] 穴居猴
 [/list]
+
+[img]https://images.steamusercontent.com/ugc/11237512703173357918/85197A2790A4E3D09E56BB81F20DD46B0F408375/[/img]
+[img]https://images.steamusercontent.com/ugc/12214714446227910701/12B3B08D2BE832B9A0BDEDB7EE696466741CEF1D/[/img]
 
 [h2]注意事项[/h2]
 [list]
@@ -43,6 +48,7 @@
 Now when creatures are attacked, their companions will just mind their own business instead of helping!
 [spoiler]In other words, you can now fight a pengull 1-vs-1![/spoiler]
 This mod removes the group aggro mechanics of creatures such as frogs, beefalos, pigmen, and pengulls. Each creature can be toggled individually, and player-hired followers are not affected.
+[spoiler]I made this mod because when I was playing mods, my followers often accidentally hit creatures like cows, resulting in them being ganged up on and killed.[/spoiler]
 
 [h2]Supported Creatures List[/h2]
 [list]
@@ -58,6 +64,9 @@ This mod removes the group aggro mechanics of creatures such as frogs, beefalos,
 [*] Rock Lobsters (excludes Enthralled Rock Lobsters)
 [*] Splumonkey
 [/list]
+
+[img]https://images.steamusercontent.com/ugc/11237512703173357918/85197A2790A4E3D09E56BB81F20DD46B0F408375/[/img]
+[img]https://images.steamusercontent.com/ugc/12214714446227910701/12B3B08D2BE832B9A0BDEDB7EE696466741CEF1D/[/img]
 
 [h2]Notes[/h2]
 [list]

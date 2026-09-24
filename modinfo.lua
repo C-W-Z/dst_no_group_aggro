@@ -14,7 +14,7 @@ local onof_en = {
 
 local LANGS = {
     ['zh'] = {
-        name = '无群体仇恨（又名关我屁事）',
+        name = '无群体仇恨（aka 雨女无瓜）',
         description =
         '移除青蛙、皮弗娄牛、猪人、企鸥等生物的群体仇恨机制。\n每种生物可单独开关，不影响玩家雇佣的生物。\n注意：不会改变生物的主动仇恨范围，因此对于索敌范围大的主动敌对生物效果可能较不明显，使用远程武器才比较容易感受到，例如鱼人、猪人守卫、永冻企鸥、充电伏特羊。',
         config = {
@@ -37,7 +37,7 @@ local LANGS = {
         }
     },
     ['en'] = {
-        name = 'No Group Aggro (aka Not My Business)',
+        name = 'No Group Aggro (aka Not Your Business)',
         description =
         'Removes the group aggro mechanics from creatures like Frogs, Beefalos, Pigmen, and Pengulls.\nEach creature can be toggled individually. Does not affect followers hired by players.\nNote: This does not change the active aggro range of creatures. Therefore, the effect might be less noticeable for actively hostile creatures with large aggro radii (e.g., Merms, Guard Pigs, Mutated Pengulls, Charged Lightning Goats) unless you use ranged weapons.',
         config = {
@@ -65,7 +65,7 @@ local LANGS = {
 local cur = (locale == 'zh' or locale == 'zhr' or locale == 'zht') and 'zh' or 'en'
 
 -- mod相关信息
-version = '1.0.0'
+version = '1.0.1'
 author = 'Icya'
 forumthread = ''
 api_version = 10
