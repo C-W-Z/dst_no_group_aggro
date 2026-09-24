@@ -12,6 +12,8 @@ local onof_en = {
     { 'No Group Aggro',  true },
 }
 
+-- TODO: 把蜜蜂/蜂巢/蜂箱分成3個設定；新增一個移除對所有生物群體仇恨還是只移除對玩家和玩家隨從的群體仇恨的選項
+
 local LANGS = {
     ['zh'] = {
         name = '无群体仇恨（aka 雨女无瓜）',
