@@ -6,7 +6,7 @@
 本模组又名：我打你同伴关你屁事，雨女无瓜！
 [h2]模组介绍[/h2]
 现在各种生物被攻击时，同伴会选择看戏而不是上前帮忙！
-[spoiler]也就是说，现在你可以和企鸥单挑了！[/spoiler]
+有了这个MOD，再也不怕不小心打到猪人或牛了，你也可以和企鸥单挑了！
 本模组移除了青蛙、皮弗娄牛、猪人、企鸥等生物的群体仇恨机制。每种生物可单独开关，不影响玩家雇佣的生物。
 [spoiler]其实制作这个模组是因为我玩模组时，随从常常不小心打到牛之类的群体仇恨生物导致被围殴致死[/spoiler]
 
@@ -48,7 +48,7 @@
 
 [h2]Mod Introduction[/h2]
 Now when creatures are attacked, their companions will just mind their own business instead of helping!
-[spoiler]In other words, you can now fight a pengull 1-vs-1![/spoiler]
+With this mod, you'll never have to worry about accidentally hitting a pigman or a beefalo again, and you can even fight a pengull 1-vs-1!
 This mod removes the group aggro mechanics of creatures such as frogs, beefalos, pigmen, and pengulls. Each creature can be toggled individually, and player-hired followers are not affected.
 [spoiler]I made this mod because when I was playing mods, my followers often accidentally hit creatures like cows, resulting in them being ganged up on and killed.[/spoiler]
 
