@@ -12,7 +12,10 @@
 
 [h2]支援的生物列表[/h2]
 [list]
-[*] 蜜蜂（包含蜂箱蜜蜂，不含杀人蜂和嗡嗡蜜蜂），有两种选项：1是蜜蜂被攻击/被捕虫网抓/蜂巢被打或烧时，蜂巢会放出无仇恨的普通蜜蜂，2是放出有仇恨的杀人蜂(避免无杀人蜂平原的地图无法抓到杀人蜂)，1和2都会让蜂箱采蜜不激怒蜜蜂
+[*] 蜜蜂：单独控制普通蜜蜂和杀人蜂之间的群体仇恨传播，不含嗡嗡蜜蜂。不会改变蜜蜂自身反击或主动索敌。
+[*] 蜂巢：单独控制野生普通蜂巢的放蜂反应（包含巢外蜜蜂被攻击或捕捉时的放蜂）。可选择原版（被攻击时放出有仇恨的杀人蜂）或无仇恨普通蜜蜂，不影响杀人蜂巢。
+[*] 蜂箱：包含隐士蜂箱，可选择原版或安全蜂箱。安全模式下采蜜不放蜂，其他放蜂反应放出无仇恨的普通蜜蜂。
+[*] 三项可独立设置；蜂巢和蜂箱的无仇恨放蜂不会关闭巢外蜂群的仇恨传播，也不会改变春季等主动索敌行为。蜂巢、蜂箱默认跟随蜜蜂设置，以兼容已有玩家：旧原版保持三项原版，旧选项1保持无群体仇恨、无仇恨普通蜜蜂及安全蜂箱，旧选项2保持无群体仇恨、原版蜂巢及安全蜂箱。旧蜜蜂设置的 key 和选项值不变，不必重设；旧 modoverrides.lua 未包含新选项时也沿用旧行为。蜂巢、蜂箱明确选为原版或安全模式时，优先采用独立设置。
 [*] 青蛙、明眼青蛙
 [*] 皮弗娄牛、小皮弗娄牛
 [*] 猪人、猪人守卫和疯猪（不含面具猪人）
@@ -54,7 +57,10 @@ This mod removes the group aggro mechanics of creatures such as frogs, beefalos,
 
 [h2]Supported Creatures List[/h2]
 [list]
-[*] Bees (includes Bee Box bees, excludes Killer Bees and Bumble Bees). Features two options: 1. When bees are attacked/netted or hives are attacked/burned, hives spawn non-aggressive regular bees; 2. Hives spawn aggressive killer bees (to prevent maps without Killer Bees Plains from being unable to catch killer bees). Both options 1 and 2 make harvesting honey from bee boxes non-aggravating to bees.
+[*] Bees: independently controls aggro sharing between regular and Killer Bees, excluding Grumble Bees. Does not change individual retaliation or active targeting.
+[*] Bee Hives: independently controls regular wild hive releases, including releases when their bees are attacked or netted. Choose Vanilla (attacks release aggressive Killer Bees) or untargeted regular bees. Excludes Killer Bee Hives.
+[*] Bee Boxes: includes Hermit Bee Boxes. Choose Vanilla or Safe Bee Boxes. Safe mode prevents harvest releases and releases untargeted regular bees in other cases.
+[*] Untargeted hive or box releases do not disable outdoor aggro sharing or active targeting, such as in spring. Hive and Box settings default to Follow Bees Setting for compatibility: old Vanilla keeps all three vanilla; old option 1 retains disabled bee aggro sharing, untargeted regular hive bees, and safe boxes; old option 2 retains disabled bee aggro sharing, vanilla hive releases, and safe boxes. The old Bees key and option values are unchanged, so existing settings need no reset. Old modoverrides.lua files missing the new keys also retain old behavior. Explicit Hive and Box selections override inheritance.
 [*] Frogs, Bright-Eyed Frogs
 [*] Beefalos, Baby Beefalos
 [*] Pigmen, Guard Pigs, and Werepigs (excludes Enthralled Pigmen)

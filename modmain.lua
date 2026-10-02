@@ -60,120 +60,73 @@ if GetModConfigData(modid .. "_frog") then
     AddPrefabPostInit("lunarfrog", RemoveGroupAggro)
 end
 
-local bee_type = GetModConfigData(modid .. "_bee")
-if bee_type then
-    local function CustomBeeOnAttacked(inst, data)
-        local attacker = data and data.attacker
-        if attacker and inst.components.combat then
-            inst.components.combat:SetTarget(attacker)
-        end
+local bee_config = GetModConfigData(modid .. "_bee")
+local beehive_config = GetModConfigData(modid .. "_beehive")
+local beebox_config = GetModConfigData(modid .. "_beebox")
 
-        -- 處理蜂巢釋放邏輯
-        if inst.components.combat and inst.components.combat:HasTarget() then
-            if inst.components.homeseeker and inst.components.homeseeker.home then
-                local home = inst.components.homeseeker.home
-                if home and home.components.childspawner then
-                    if inst.prefab == "bee" then
-                        -- 根據設定決定普通蜜蜂巢穴的反應
-                        if bee_type == "bee" then
-                            home.components.childspawner:ReleaseAllChildren(nil, "bee")
-                        else
-                            home.components.childspawner:ReleaseAllChildren(attacker, "killerbee")
-                        end
-                    else
-                        -- 如果是殺人蜂 (killerbee) 被打，永遠放出帶仇恨的殺人蜂
-                        home.components.childspawner:ReleaseAllChildren(attacker, "killerbee")
-                    end
-                end
-            end
-        end
-        -- 這裡完全不呼叫 ShareTarget，切斷外面蜜蜂的仇恨傳播
-    end
+-- 新設定預設跟隨舊選項；也處理舊 modoverrides.lua 未包含新 key 的情況。
+if beehive_config == nil or beehive_config == "inherit" then
+    beehive_config = bee_config == "bee" and "bee" or false
+end
+if beebox_config == nil or beebox_config == "inherit" then
+    beebox_config = bee_config ~= nil and bee_config ~= false
+end
 
-    local function CustomBeeOnWorked(inst, data)
-        CustomBeeOnAttacked(inst, { attacker = data.worker })
-    end
-
+-- 仇恨由受擊的蜂傳遞，普通蜜蜂及殺人蜂都需要攔截 ShareTarget。
+-- 保留原版受擊、捕捉和呼叫巢穴放蜂的事件，由巢穴的獨立設定處理放蜂。
+if bee_config then
     local function DisableBeeGroupAggro(inst)
-        if not TheWorld.ismastersim then
-            return
-        end
-
-        -- 清除原版事件
-        RemoveVanillaEventCallback(inst, "attacked", "beecommon.lua")
-        RemoveVanillaEventCallback(inst, "worked", "beecommon.lua")
-
-        -- 綁定我們自定義的事件
-        inst:ListenForEvent("attacked", CustomBeeOnAttacked)
-        inst:ListenForEvent("worked", CustomBeeOnWorked)
-
-        -- 保險起見，掏空 ShareTarget 避免其他模組或底層邏輯呼叫
+        if not GLOBAL.TheWorld.ismastersim then return end
         if inst.components.combat then
-            inst.components.combat.ShareTarget = function()
-            end
+            inst.components.combat.ShareTarget = function() end
         end
     end
 
     AddPrefabPostInit("bee", DisableBeeGroupAggro)
     AddPrefabPostInit("killerbee", DisableBeeGroupAggro)
+end
 
-    -- 處理蜂巢/蜂箱本體被打、被燒、被收蜜的邏輯
-    -- 針對建築物 (蜂巢與蜂箱) 的 Patch
+-- 蜂巢獨立決定放出的蜂種與目標，包括巢外蜜蜂受擊／捕捉時的放蜂請求。
+if beehive_config == "bee" then
     AddPrefabPostInit("beehive", function(inst)
-        if not TheWorld.ismastersim then
-            return
-        end
-
+        if not GLOBAL.TheWorld.ismastersim then return end
         if inst.components.childspawner then
-            -- 備份原版的釋放函數
             local old_ReleaseAllChildren = inst.components.childspawner.ReleaseAllChildren
-
-            -- 攔截並覆寫釋放函數
-            inst.components.childspawner.ReleaseAllChildren = function(self, target, prefab)
-                -- 這個攔截只針對 bee_type == "bee" 的設定起作用
-                -- 如果是 "killerbee"，就維持原版行為
-                if bee_type == "bee" then
-                    -- 強制將目標設為 nil，出來的蜂種強制設為 "bee"
-                    return old_ReleaseAllChildren(self, nil, "bee")
-                else
-                    -- 原版設定：交由原始函數處理 (可能帶有 target 和 "killerbee")
-                    return old_ReleaseAllChildren(self, target, prefab)
-                end
+            inst.components.childspawner.ReleaseAllChildren = function(self, target, prefab, ...)
+                return old_ReleaseAllChildren(self, nil, "bee", ...)
             end
         end
     end)
+end
 
+-- 蜂箱獨立控制採蜜和其他放蜂反應，不受蜜蜂或野生蜂巢設定影響。
+if beebox_config then
     local function SafeBeebox(inst)
-        if not TheWorld.ismastersim then
-            return
-        end
+        if not GLOBAL.TheWorld.ismastersim then return end
 
-        -- 處理收蜜時不釋放蜜蜂的邏輯
-        if inst.components.harvestable then
+        if inst.components.harvestable and inst.components.harvestable.onharvestfn then
             local old_onharvest = inst.components.harvestable.onharvestfn
-            inst.components.harvestable.onharvestfn = function(self_inst, picker, produce)
+            inst.components.harvestable.onharvestfn = function(self_inst, picker, produce, ...)
                 if self_inst.components.childspawner then
-                    -- 暫存原版函數，並在收蜜期間短暫替換為空函數
-                    local old_release = self_inst.components.childspawner.ReleaseAllChildren
-                    self_inst.components.childspawner.ReleaseAllChildren = function() end
+                    local spawner = self_inst.components.childspawner
+                    local old_release = spawner.ReleaseAllChildren
+                    spawner.ReleaseAllChildren = function() end
 
-                    -- 執行原版收蜜邏輯
-                    old_onharvest(self_inst, picker, produce)
-
-                    -- 恢復原版釋放函數
-                    self_inst.components.childspawner.ReleaseAllChildren = old_release
-                else
-                    old_onharvest(self_inst, picker, produce)
+                    -- 完成原版採蜜後恢復放蜂方法，並保留所有回傳值。
+                    local function FinishHarvest(...)
+                        spawner.ReleaseAllChildren = old_release
+                        return ...
+                    end
+                    return FinishHarvest(old_onharvest(self_inst, picker, produce, ...))
                 end
+                return old_onharvest(self_inst, picker, produce, ...)
             end
         end
 
-        -- 處理被燒等其他情況釋放但無仇恨的邏輯
         if inst.components.childspawner then
             local old_ReleaseAllChildren = inst.components.childspawner.ReleaseAllChildren
-            inst.components.childspawner.ReleaseAllChildren = function(self, target, prefab)
-                -- 強制清除仇恨目標，並保證出來的是普通蜜蜂
-                return old_ReleaseAllChildren(self, nil, "bee")
+            inst.components.childspawner.ReleaseAllChildren = function(self, target, prefab, ...)
+                return old_ReleaseAllChildren(self, nil, "bee", ...)
             end
         end
     end

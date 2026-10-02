@@ -12,7 +12,7 @@ local onof_en = {
     { 'No Group Aggro',  true },
 }
 
--- TODO: 把蜜蜂/蜂巢/蜂箱分成3個設定；新增一個移除對所有生物群體仇恨還是只移除對玩家和玩家隨從的群體仇恨的選項
+-- TODO: 新增一個移除對所有生物群體仇恨還是只移除對玩家和玩家隨從的群體仇恨的選項
 
 local LANGS = {
     ['zh'] = {
@@ -20,10 +20,20 @@ local LANGS = {
         description =
         '移除青蛙、皮弗娄牛、猪人、企鸥等生物的群体仇恨机制。\n每种生物可单独开关，不影响玩家雇佣的生物。\n注意：不会改变生物的主动仇恨范围，因此对于索敌范围大的主动敌对生物效果可能较不明显，使用远程武器才比较容易感受到，例如鱼人、猪人守卫、永冻企鸥、充电伏特羊。',
         config = {
-            { modid .. '_bee', '蜜蜂', '包含蜂箱蜜蜂，不含杀人蜂和嗡嗡蜜蜂', "bee", {
-                { '有群体仇恨', false, "不修改任何机制" },
-                { '无群体仇恨(1)', "bee", "被攻击或被捕虫网抓时蜂巢出无仇恨蜜蜂" },
-                { '无群体仇恨(2)', "killerbee", "被攻击或被捕虫网抓时蜂巢出有仇恨杀人蜂" },
+            { modid .. '_bee', '蜜蜂', '控制普通蜜蜂和杀人蜂的仇恨传播，不含嗡嗡蜜蜂；保留旧选项值以兼容已有设置', "bee", {
+                { '原版', false, "保留蜂群仇恨；蜂巢、蜂箱选择跟随时也保留原版行为" },
+                { '无群体仇恨', "bee", "蜂群不传播仇恨；蜂巢、蜂箱选择跟随时放出无仇恨普通蜜蜂，采蜜不放蜂" },
+                { '无群体仇恨（旧选项2）', "killerbee", "兼容旧设置：蜂群不传播仇恨；蜂巢跟随时保持原版放蜂，蜂箱跟随时安全采蜜" },
+            } },
+            { modid .. '_beehive', '蜂巢', '只影响野生普通蜂巢，不影响杀人蜂巢；也影响巢外蜜蜂被攻击或捕捉时的放蜂反应', "inherit", {
+                { '跟随蜜蜂设置', "inherit", "保持旧版蜜蜂选项对应的蜂巢行为；可改为下面的独立设置" },
+                { '原版', false, "保留原版放蜂行为：被攻击时放出有仇恨的杀人蜂" },
+                { '无仇恨蜜蜂', "bee", "放出无仇恨的普通蜜蜂；巢外蜂群的仇恨传播由蜜蜂选项控制" },
+            } },
+            { modid .. '_beebox', '蜂箱', '包含隐士蜂箱；安全模式下采蜜不放蜂，其他放蜂反应放出无仇恨的普通蜜蜂', "inherit", {
+                { '跟随蜜蜂设置', "inherit", "保持旧版蜜蜂选项对应的蜂箱行为；可改为下面的独立设置" },
+                { '原版', false, "保留原版采蜜和放蜂行为" },
+                { '安全蜂箱', true, "采蜜不放蜂，其他放蜂反应不指定仇恨目标；巢外蜂群由蜜蜂选项控制" },
             } },
             { modid .. '_frog', '青蛙', '包含明眼青蛙', true, onof_zh },
             -- { modid .. '_spider', '蜘蛛', '包含各种蜘蛛', true, onof_zh },
@@ -43,10 +53,20 @@ local LANGS = {
         description =
         'Removes the group aggro mechanics from creatures like Frogs, Beefalos, Pigmen, and Pengulls.\nEach creature can be toggled individually. Does not affect followers hired by players.\nNote: This does not change the active aggro range of creatures. Therefore, the effect might be less noticeable for actively hostile creatures with large aggro radii (e.g., Merms, Guard Pigs, Mutated Pengulls, Charged Lightning Goats) unless you use ranged weapons.',
         config = {
-            { modid .. '_bee', 'Bees', 'Includes bees from bee boxes, excludes Killer Bees and Grumble Bees', "bee", {
-                { 'Vanilla', false, "Do not modify any mechanics" },
-                { 'No Group Aggro (1)', "bee", "Hives spawn non-aggressive bees when attacked or netted" },
-                { 'No Group Aggro (2)', "killerbee", "Hives spawn aggressive killer bees when attacked or netted" },
+            { modid .. '_bee', 'Bees', 'Controls aggro sharing from regular and Killer Bees, excluding Grumble Bees; retains old option values for existing settings', "bee", {
+                { 'Vanilla', false, "Preserve bee aggro sharing; inherited hive and box settings also use vanilla behavior" },
+                { 'No Group Aggro', "bee", "No bee aggro sharing; inherited hives and boxes release untargeted regular bees, with no harvest releases" },
+                { 'No Group Aggro (Legacy 2)', "killerbee", "Preserve old option 2: no bee aggro sharing; inherited hives use vanilla releases and inherited boxes use safe harvesting" },
+            } },
+            { modid .. '_beehive', 'Bee Hives', 'Only regular wild hives, excluding Killer Bee Hives; also controls releases when their bees are attacked or netted', "inherit", {
+                { 'Follow Bees Setting', "inherit", "Preserve hive behavior from the old Bees option, or choose an independent setting below" },
+                { 'Vanilla', false, "Preserve vanilla releases: attacking a hive releases aggressive Killer Bees" },
+                { 'Untargeted Bees', "bee", "Release regular bees without an aggro target; outdoor aggro sharing is controlled by Bees" },
+            } },
+            { modid .. '_beebox', 'Bee Boxes', 'Includes Hermit Bee Boxes; safe mode prevents harvest releases and releases untargeted regular bees in other cases', "inherit", {
+                { 'Follow Bees Setting', "inherit", "Preserve box behavior from the old Bees option, or choose an independent setting below" },
+                { 'Vanilla', false, "Preserve vanilla harvesting and bee releases" },
+                { 'Safe Bee Boxes', true, "No bees released on harvest; other releases have no aggro target; outdoor aggro sharing is controlled by Bees" },
             } },
             { modid .. '_frog', 'Frogs', 'Includes Bright-Eyed Frog', true, onof_en },
             -- { modid .. '_spider', 'Spiders', 'Includes all spider variants', true, onof_en },
