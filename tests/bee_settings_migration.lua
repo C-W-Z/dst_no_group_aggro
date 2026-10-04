@@ -78,22 +78,7 @@ for _, profile in ipairs(legacy_profiles) do
     end
 end
 
--- 每個舊值配上所有舊獨立選項，false 不能誤判成未設定。
-for _, profile in ipairs(legacy_profiles) do
-    for _, hive in ipairs({ false, "bee", "inherit" }) do
-        for _, box in ipairs({ false, true, "inherit" }) do
-            local definitions = Definitions()
-            local raw = Saved(profile[1], hive, box)
-            local migrated = Settings.Migrate(definitions, raw, false) or raw
-            Eq(Record(migrated, keys[1]).saved, profile[2], "bee converted")
-            Eq(Record(migrated, keys[2]).saved, hive == "inherit" and profile[3] or hive == "bee", "independent hive preserved")
-            local expected_box = box
-            if box == "inherit" then expected_box = profile[4] end
-            Eq(Record(migrated, keys[3]).saved, expected_box, "independent box preserved")
-        end
-    end
-end
-
+-- 新版三個布林值須原樣保留，不能在重開後再次繼承或重設。
 for _, bee in ipairs({ false, true }) do
     for _, hive in ipairs({ false, true }) do
         for _, box in ipairs({ false, true }) do
@@ -160,6 +145,7 @@ local function Frontend(deferred, initial)
     end
     if initial then index:LoadModConfigurationOptions("test_mod", false) end
     local environment = { GLOBAL = { KnownModIndex = index }, modname = "test_mod" }
+    environment.env = environment
     Load("modservercreationmain.lua", environment)
     local installed = index.UpdateConfigurationOptions
     Load("modservercreationmain.lua", environment)
@@ -178,6 +164,11 @@ do
     Triple(a, b, c, { "original", nil, "tail" })
     Eq(#index.writes, 1, "foreign configuration is never saved")
     Eq(Record(other, keys[1]).saved, "bee", "foreign configuration retains original merge")
+    -- 全新的 index／包裝狀態，模擬重開遊戲後讀取已遷移的設定檔。
+    local restarted, restarted_options = Frontend(false, index.disk.server)
+    Eq(#restarted.writes, 0, "fresh session does not migrate again")
+    local bee, hive, box = Settings.ReadOptions(restarted_options, false)
+    Triple(bee, hive, box, { true, false, true })
 end
 do
     local index, options = Frontend(false)

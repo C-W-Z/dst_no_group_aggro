@@ -1,5 +1,7 @@
 -- modmain 在選單之後才執行；前端必須先遷移舊值，兩個布林選項才能正確選中。
 local BeeSettings = require("no_group_aggro/bee_settings")
+---@type string
+local modname = env.modname
 local index = GLOBAL.KnownModIndex
 
 -- 設定畫面 PostConstruct 時舊值已進入 spinner；這裡需在画面建立前轉換。

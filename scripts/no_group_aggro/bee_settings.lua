@@ -4,13 +4,13 @@ local keys = { "no_group_aggro_bee", "no_group_aggro_beehive", "no_group_aggro_b
 
 function BeeSettings.Resolve(bee, hive, box)
     local enabled = bee == true or bee == "bee" or bee == "killerbee"
-    if hive == nil or hive == "inherit" then
+    if hive == nil then
         hive = bee == true or bee == "bee"
     end
-    if box == nil or box == "inherit" then
+    if box == nil then
         box = enabled
     end
-    return enabled, hive == true or hive == "bee", box == true
+    return enabled, hive == true, box == true
 end
 
 -- present 區分實際儲存值與新版 default；舊設定缺少獨立值時才能正確繼承。
