@@ -13,10 +13,10 @@ local function RemoveVanillaEventCallback(inst, event, filename)
         -- 倒序遍歷，因為呼叫 RemoveEventCallback 會改變陣列長度 (RemoveByValue)
         for i = #listener_fns, 1, -1 do
             local fn = listener_fns[i]
-            if GLOBAL.type(fn) == "function" then
-                local info = GLOBAL.debug.getinfo(fn, "S")
+            if type(fn) == "function" then
+                local info = debug.getinfo(fn, "S")
                 -- 透過來源路徑比對是否為官方寫在該生物 lua 檔中的函數
-                if info and info.source and GLOBAL.string.find(info.source, filename) then
+                if info and info.source and string.find(info.source, filename) then
                     -- 找到目標後，使用底層標準的 API 乾淨地移除它
                     inst:RemoveEventCallback(event, fn)
                 end
@@ -27,7 +27,7 @@ end
 
 if config.monkey then
     AddPrefabPostInit("monkey", function(inst)
-        if not GLOBAL.TheWorld.ismastersim then return end
+        if not TheWorld.ismastersim then return end
 
         -- 精準移除 monkey.lua 中綁定的 attacked 事件，保留其他所有模組或組件的監聽
         RemoveVanillaEventCallback(inst, "attacked", "monkey.lua")
@@ -51,7 +51,7 @@ if config.monkey then
                     self_inst.task:Cancel()
                 end
 
-                self_inst.task = self_inst:DoTaskInTime(GLOBAL.math.random(55, 65), function(i)
+                self_inst.task = self_inst:DoTaskInTime(math.random(55, 65), function(i)
                     if i.components.combat then i.components.combat:SetTarget(nil) end
                 end)
             end

@@ -3,7 +3,7 @@ local config = env.no_group_aggro.config
 
 ---@param inst ent
 local function RemoveGroupAggro(inst)
-    if not GLOBAL.TheWorld.ismastersim then return end
+    if not TheWorld.ismastersim then return end
 
     if inst.components.combat then
         local old_ShareTarget = inst.components.combat.ShareTarget
@@ -57,7 +57,7 @@ if config.merm then
     -- AddPrefabPostInit("merm_lunar", RemoveGroupAggro)
     -- AddPrefabPostInit("mermguard_lunar", RemoveGroupAggro)
     AddPrefabPostInit("mermking", function(inst)
-        if not GLOBAL.TheWorld.ismastersim then return end
+        if not TheWorld.ismastersim then return end
         if inst.components.combat then
             inst.components.combat.ShareTarget = function()
                 -- Do nothing，魚人王不再向周圍廣播仇恨，但還是會召喚4隻專屬護衛

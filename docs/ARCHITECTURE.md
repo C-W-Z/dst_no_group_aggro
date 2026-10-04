@@ -2,7 +2,8 @@
 
 此 MOD 只需伺服器安裝。`modmain.lua` 是組裝入口：建立 MOD 專用表，
 以 `modimport` 先讀取設定，再載入各生物的功能檔並註冊 Hook。
-它不再替 MOD 環境設定全域 fallback。
+入口最上面保留 `GLOBAL.setmetatable(env, ...)` 的全域 fallback；
+功能檔在同一 MOD 環境中可直接使用遊戲全域名稱。
 
 | 檔案（相對於 MOD 根目錄） | 職責 |
 | --- | --- |
@@ -30,8 +31,9 @@
 
 蜘蛛、巢穴與女王的 Hook 依賴同一個 `spider_context`，因此保留在同一模組。
 新增功能優先放入對應功能模組；新增設定集中在 `config.lua` 解析，選單仍由
-獨立環境中的 `modinfo.lua` 定義。遊戲全域採明確的 `GLOBAL` 引用，
-修改 components 的 callbacks 先檢查 `GLOBAL.TheWorld.ismastersim`。
+獨立環境中的 `modinfo.lua` 定義。遊戲全域經由入口的 `env.__index`
+fallback 查找，不必逐處加 `GLOBAL.`；修改 components 的 callbacks
+先檢查 `TheWorld.ismastersim`。`modinfo.lua` 不繼承入口的 fallback。
 
 ## 重構範圍與既有問題
 

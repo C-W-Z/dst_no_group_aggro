@@ -14,10 +14,10 @@ local function WithSpiderContext(context, fn, ...)
     spider_context = context
     local function Finish(ok, ...)
         spider_context = previous
-        if not ok then GLOBAL.error((...), 0) end
+        if not ok then error((...), 0) end
         return ...
     end
-    return Finish(GLOBAL.pcall(fn, ...))
+    return Finish(pcall(fn, ...))
 end
 
 local function SpiderLeader(inst)
@@ -36,7 +36,7 @@ local function ClearAlarmSpider(inst)
 end
 
 local function SpiderPostInit(inst)
-    if not GLOBAL.TheWorld.ismastersim then return end
+    if not TheWorld.ismastersim then return end
 
     local combat = inst.components.combat
     if combat ~= nil then
@@ -143,12 +143,12 @@ local function WrapNestCallback(inst, component, field, kind)
 end
 
 local function SpiderNestPostInit(inst)
-    if not GLOBAL.TheWorld.ismastersim then return end
+    if not TheWorld.ismastersim then return end
     local spawner = inst.components.childspawner
     if spawner == nil then return end
 
     -- 停止生成必須在 SpawnChild 扣庫存及 TakeOwnership 之前返回。
-    for _, name in GLOBAL.ipairs({ "SpawnChild", "SpawnEmergencyChild" }) do
+    for _, name in ipairs({ "SpawnChild", "SpawnEmergencyChild" }) do
         local original = spawner[name]
         spawner[name] = function(self, ...)
             local context = spider_context
@@ -191,7 +191,7 @@ local function SpiderNestPostInit(inst)
     WrapNestCallback(inst, inst.components.burnable, "onignite", "defense")
     WrapNestCallback(inst, inst, "SummonChildren", "routine")
 
-    for _, name in GLOBAL.ipairs({ "PushEvent", "PushEventImmediate" }) do
+    for _, name in ipairs({ "PushEvent", "PushEventImmediate" }) do
         local original = inst[name]
         inst[name] = function(self, event, ...)
             if event == "creepactivate" or (event == "activated" and self.prefab == "oceanvine_cocoon") then
@@ -217,7 +217,7 @@ local function SpiderNestPostInit(inst)
 end
 
 local function SpiderQueenPostInit(inst)
-    if not GLOBAL.TheWorld.ismastersim then return end
+    if not TheWorld.ismastersim then return end
     inst.components.combat.ShareTarget = function() end
     local leader = inst.components.leader
     -- 只修改女王實例，不修改玩家 leader，也不拆掉追隨關係。
@@ -232,13 +232,13 @@ end
 
 if spider_share or spider_nest_help or spider_queen
     or spider_defense ~= "vanilla" or spider_alarm ~= "vanilla" then
-    for _, prefab in GLOBAL.ipairs({ "spider", "spider_warrior", "spider_hider", "spider_spitter",
+    for _, prefab in ipairs({ "spider", "spider_warrior", "spider_hider", "spider_spitter",
         "spider_dropper", "spider_moon", "spider_healer", "spider_water" }) do
         AddPrefabPostInit(prefab, SpiderPostInit)
     end
 end
 if spider_defense ~= "vanilla" or spider_alarm ~= "vanilla" then
-    for _, prefab in GLOBAL.ipairs({ "spiderden", "spiderden_2", "spiderden_3", "spiderhole",
+    for _, prefab in ipairs({ "spiderden", "spiderden_2", "spiderden_3", "spiderhole",
         "moonspiderden", "dropperweb", "oceanvine_cocoon" }) do
         AddPrefabPostInit(prefab, SpiderNestPostInit)
     end

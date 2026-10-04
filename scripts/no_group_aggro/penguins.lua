@@ -8,18 +8,18 @@ if config.penguin then
             return nil
         end
         -- 只回傳目標，不呼叫 MakeTeam
-        return GLOBAL.FindEntity(inst, 3, function(guy) return inst.components.combat:CanTarget(guy) end,
+        return FindEntity(inst, 3, function(guy) return inst.components.combat:CanTarget(guy) end,
             { "_combat" }, { "penguin" }, { "character", "monster", "wall" })
     end
 
     -- 重寫月亮企鵝的單體索敵邏輯
     local function MutatedPenguinSafeRetarget(inst)
-        return GLOBAL.FindEntity(inst, 4, function(guy) return inst.components.combat:CanTarget(guy) end,
+        return FindEntity(inst, 4, function(guy) return inst.components.combat:CanTarget(guy) end,
             { "_combat" }, { "penguin", "mutantdominant" }, { "character", "monster", "smallcreature", "animal", "wall" })
     end
 
     local function SafeRemovePenguinGroupAggro(inst)
-        if not GLOBAL.TheWorld.ismastersim then return end
+        if not TheWorld.ismastersim then return end
 
         if inst.components.combat then
             -- 替換索敵函數，切斷主動組隊
