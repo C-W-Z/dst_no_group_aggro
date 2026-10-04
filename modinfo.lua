@@ -20,6 +20,17 @@ local LANGS = {
         description =
         '移除青蛙、皮弗娄牛、猪人、企鸥等生物的群体仇恨机制。\n每种生物可单独开关，不影响玩家雇佣的生物。\n注意：不会改变生物的主动仇恨范围，因此对于索敌范围大的主动敌对生物效果可能较不明显，使用远程武器才比较容易感受到，例如鱼人、猪人守卫、永冻企鸥、充电伏特羊。',
         config = {
+            { modid .. '_frog', '青蛙', '包含明眼青蛙', true, onof_zh },
+            { modid .. '_beefalo', '皮弗娄牛', '包含小皮弗娄牛', true, onof_zh },
+            { modid .. '_pigman', '猪人', '包含猪人守卫和疯猪，不含面具猪人', true, onof_zh },
+            { modid .. '_bunnyman', '兔人', '不含舒适兔人、皇家兔子警卫和面具兔人', true, onof_zh },
+            { modid .. '_merm', '鱼人', '包含忠诚鱼人守卫，不含面具鱼人', true, onof_zh },
+            { modid .. '_penguin', '企鸥', '包含永冻企鸥', true, onof_zh },
+            { modid .. '_otter', '水獭掠夺者', '', true, onof_zh },
+            { modid .. '_lightninggoat', '充电伏特羊', '', true, onof_zh },
+            { modid .. '_rocky', '石虾', '不含面具石虾', true, onof_zh },
+            { modid .. '_monkey', '穴居猴', '', true, onof_zh },
+            { "蜜蜂相關" },
             { modid .. '_bee', '蜜蜂', '只影響普通蜜蜂，不含殺人蜂和嗡嗡蜜蜂', "bee", {
                 { '原版', false },
                 { '无群体仇恨', "bee", "巢外蜂群無仇恨；蜂巢、蜂箱放出无仇恨蜜蜂，采蜜不放蜂" },
@@ -35,7 +46,7 @@ local LANGS = {
                 { '原版', false, "採蜜激怒蜜蜂" },
                 { '安全蜂箱', true, "采蜜不放蜂，放蜂不仇恨" },
             } },
-            { modid .. '_frog', '青蛙', '包含明眼青蛙', true, onof_zh },
+            { "蜘蛛相關" },
             { modid .. '_spider', '蜘蛛互相援助', '包含八种蜘蛛；只移除野生蜘蛛的受击援助，玩家蜘蛛保留原版，女王子蛛由女王设置控制', true, onof_zh },
             { modid .. '_spider_nest_help', '蜘蛛呼叫蛛巢', '移除受击蜘蛛呼叫附近蛛巢增援；保留玩家蜘蛛及面具蜘蛛的呼叫，实际放蛛由巢穴防卫设置控制', true, onof_zh },
             { modid .. '_spider_nest_defense', '蛛巢防卫', '包含各级普通巢、岩穴、月岛巢和海黽巢繭；控制攻击、采掘、剃巢、作祟、着火的防卫，不影响毁巢后的原版无目标逸出', "untargeted", {
@@ -49,15 +60,6 @@ local LANGS = {
                 { '停止警报出蛛', "disabled", "不因警报生成蜘蛛；防卫、日常出巢、吹哨及海黽捕鱼独立运作" },
             } },
             { modid .. '_spiderqueen', '蜘蛛女王', '移除女王间援助、对子蛛的目标指派、新生子蛛继承目标及子蛛互相援助；保留产子、跟随与单体战斗', true, onof_zh },
-            { modid .. '_beefalo', '皮弗娄牛', '包含小皮弗娄牛', true, onof_zh },
-            { modid .. '_pigman', '猪人', '包含猪人守卫和疯猪，不含面具猪人', true, onof_zh },
-            { modid .. '_bunnyman', '兔人', '不含舒适兔人、皇家兔子警卫和面具兔人', true, onof_zh },
-            { modid .. '_merm', '鱼人', '包含忠诚鱼人守卫，不含面具鱼人', true, onof_zh },
-            { modid .. '_penguin', '企鸥', '包含永冻企鸥', true, onof_zh },
-            { modid .. '_otter', '水獭掠夺者', '', true, onof_zh },
-            { modid .. '_lightninggoat', '充电伏特羊', '', true, onof_zh },
-            { modid .. '_rocky', '石虾', '不含面具石虾', true, onof_zh },
-            { modid .. '_monkey', '穴居猴', '', true, onof_zh },
         }
     },
     ['en'] = {
