@@ -21,8 +21,7 @@ local config = {
     bunnyman = Read("_bunnyman"),
     merm = Read("_merm"),
     penguin = Read("_penguin"),
-    -- 原入口讀取的是無底線 key；本次結構重構保留既有行為。
-    otter = Read("otter"),
+    otter = Read("_otter"),
     lightninggoat = Read("_lightninggoat"),
     rocky = Read("_rocky"),
     monkey = Read("_monkey"),
