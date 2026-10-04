@@ -1,7 +1,7 @@
 # 程式結構
 
-此 MOD 只需伺服器安裝。`modmain.lua` 是組裝入口：讀取設定，將
-`GLOBAL` 和 `AddPrefabPostInit` 明確傳入功能模組，再註冊各生物的 Hook。
+此 MOD 只需伺服器安裝。`modmain.lua` 是組裝入口：建立 MOD 專用表，
+以 `modimport` 先讀取設定，再載入各生物的功能檔並註冊 Hook。
 它不再替 MOD 環境設定全域 fallback。
 
 | 檔案（相對於 MOD 根目錄） | 職責 |
@@ -16,14 +16,17 @@
 
 ## 載入與依賴
 
-遊戲將 MOD 的 `scripts/?.lua` 加入模組搜尋路徑，因此入口以
-`GLOBAL.require("no_group_aggro/模組名稱")` 載入。獨立的 `no_group_aggro/`
-名稱空間避免與其他 MOD 的一般檔名混用。
+入口使用 `modimport("scripts/no_group_aggro/模組名稱.lua")`。
+本地參考源碼 `scripts/mods.lua:340-354` 定義的載入器從 `env.MODROOT`
+解析路徑，以 `setfenv(result, env.env)` 設定 MOD 環境並執行檔案；
+沒有回傳執行結果，也沒有 `require` 的模組快取。
 
-`config.lua` 回傳設定解析函式，介面為 `(GetModConfigData, modid)`；
-其他模組回傳註冊函式，介面為 `(api, config)`。`api` 只提供上述兩個依賴。
-模組載入本身不註冊 Hook；入口每次呼叫註冊函式才建立 callbacks 和私有狀態，
-不把某次載入的設定或蜘蛛生成上下文留在 `require` 的快取中。
+各功能檔可直接使用同一 MOD 環境中的 `AddPrefabPostInit`、
+`GetModConfigData`、`GLOBAL` 和 `env`。不同檔案的 `local` 不會互相共享，
+因此入口建立 `env.no_group_aggro`，設定檔寫入其 `config`，功能檔再以
+`local config = env.no_group_aggro.config` 取得設定。設定檔必須先載入。
+其他函式、callbacks 與蜘蛛生成上下文仍是各檔案的私有 local。
+每次載入 MOD 都建立新的專用表，避免沿用上次載入的設定。
 
 蜘蛛、巢穴與女王的 Hook 依賴同一個 `spider_context`，因此保留在同一模組。
 新增功能優先放入對應功能模組；新增設定集中在 `config.lua` 解析，選單仍由
@@ -44,6 +47,9 @@
 情境，以及 3,273 項設定與生物行為對照斷言（135 組設定、102 組生物情境）。
 涵蓋重複載入時的設定隔離、客戶端檢查、隨從／寄生宿主例外、多重回傳、
 企鵝索敵及猴子事件／任務清理。未執行 DST 遊戲內測試。
+
+改用 `modimport` 後，上述檢查再次通過；測試直接使用本地 `mods.lua` 的
+載入器函式，在 Lua 5.5 下只模擬 Lua 5.1 的 `setfenv` API。
 
 語法檢查只涵蓋本次修改的入口與功能模組。Lua 5.5 的語法檢查、設定／Hook
 對照及模擬引擎回歸測試不能證明 Lua 5.1 或 DST 遊戲內相容性。
