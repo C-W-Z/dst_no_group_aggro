@@ -52,7 +52,6 @@ for _, locale in ipairs({ "en", "zh", "zhr", "zht" }) do
     end
     local bee, hive, box = Settings.ReadOptions(definitions, false)
     Triple(bee, hive, box, { true, true, true })
-    Eq(Settings.Migrate(definitions, definitions, false), nil, "new installation needs no write")
 end
 
 local legacy_profiles = {
@@ -60,31 +59,11 @@ local legacy_profiles = {
     { "bee", true, true, true },
     { "killerbee", true, false, true },
 }
-for _, profile in ipairs(legacy_profiles) do
-    for _, client in ipairs({ false, true }) do
-        local definitions = Definitions()
-        local unrelated = { name = "removed_or_unrelated_option", saved = "keep", default = "old" }
-        local raw = Saved(profile[1])
-        raw[#raw + 1] = unrelated
-        local migrated = assert(Settings.Migrate(definitions, raw, client))
-        for i = 1, 3 do
-            Eq(Record(migrated, keys[i]).saved, profile[i + 1], "old profile conversion")
-            Eq(Record(definitions, keys[i])[client and "saved_client" or "saved_server"], profile[i + 1], "active field updated")
-        end
-        Eq(Record(raw, keys[1]).saved, profile[1], "source saved data untouched")
-        Eq(Record(migrated, unrelated.name).saved, "keep", "unrelated saved value preserved")
-        Eq(Record(migrated, unrelated.name).default, "old", "unrelated metadata preserved")
-        Eq(Settings.Migrate(definitions, migrated, client), nil, "migration is idempotent")
-    end
-end
-
 -- 新版三個布林值須原樣保留，不能在重開後再次繼承或重設。
 for _, bee in ipairs({ false, true }) do
     for _, hive in ipairs({ false, true }) do
         for _, box in ipairs({ false, true }) do
-            local definitions = Definitions()
             local raw = Saved(bee, hive, box)
-            Eq(Settings.Migrate(definitions, raw, false), nil, "modern settings unchanged")
             local a, b, c = Settings.ReadOptions(raw, false)
             Triple(a, b, c, { bee, hive, box })
         end
@@ -99,6 +78,7 @@ for _, profile in ipairs(legacy_profiles) do
     Record(options, keys[1]).saved = profile[1]
     a, b, c = Settings.ReadOptions(options, false)
     Triple(a, b, c, { profile[2], profile[3], profile[4] })
+    Eq(Record(options, keys[1]).saved, profile[1], "read does not rewrite old saved value")
 end
 do
     local a, b, c = Settings.ReadOptions({}, true)
@@ -108,90 +88,6 @@ do
     Record(options, keys[1]).saved_server = "killerbee"
     a, b, c = Settings.ReadOptions(options, false)
     Triple(a, b, c, { true, false, true })
-end
-
-local function Frontend(deferred, initial)
-    local options = Definitions()
-    local other_options = Definitions()
-    local index = { writes = {}, info = { configuration_options = options }, disk = { server = initial } }
-    function index:GetModInfo(name)
-        Eq(name, "test_mod", "scoped mod lookup")
-        return self.info
-    end
-    function index:UpdateConfigurationOptions(target, savedata, client, extra)
-        for _, old in ipairs(savedata) do
-            local option = Record(target, old.name)
-            if option and old.saved ~= nil then
-                option.saved = old.saved
-                option[client and "saved_client" or "saved_server"] = old.saved
-            end
-        end
-        return "original", nil, extra
-    end
-    function index:SaveConfigurationOptions(callback, name, data, client)
-        Eq(name, "test_mod", "only own mod saved")
-        self.writes[#self.writes + 1] = { data = data, client = client }
-        self.disk[client and "client" or "server"] = data
-        local function Finish()
-            callback()
-            self:LoadModConfigurationOptions(name, client)
-        end
-        if deferred then self.pending = Finish else Finish() end
-    end
-    function index:LoadModConfigurationOptions(name, client)
-        local data = self.disk[client and "client" or "server"]
-        if data then self:UpdateConfigurationOptions(options, data, client) end
-        return options
-    end
-    if initial then index:LoadModConfigurationOptions("test_mod", false) end
-    local environment = { GLOBAL = { KnownModIndex = index }, modname = "test_mod" }
-    environment.env = environment
-    Load("modservercreationmain.lua", environment)
-    local installed = index.UpdateConfigurationOptions
-    Load("modservercreationmain.lua", environment)
-    Eq(index.UpdateConfigurationOptions, installed, "no duplicate wrappers")
-    return index, options, other_options
-end
-
-do
-    local initial = Saved("killerbee")
-    initial[#initial + 1] = { name = "old_removed_key", saved = "preserved" }
-    local index, options, other = Frontend(false, initial)
-    Eq(#index.writes, 1, "initial load migrates and saves once")
-    Eq(Record(options, keys[2]).saved, false, "old option 2 selected before UI")
-    Eq(Record(index.writes[1].data, "old_removed_key").saved, "preserved", "initial migration retains unknown keys")
-    local a, b, c = index:UpdateConfigurationOptions(other, Saved("bee"), false, "tail")
-    Triple(a, b, c, { "original", nil, "tail" })
-    Eq(#index.writes, 1, "foreign configuration is never saved")
-    Eq(Record(other, keys[1]).saved, "bee", "foreign configuration retains original merge")
-    -- 全新的 index／包裝狀態，模擬重開遊戲後讀取已遷移的設定檔。
-    local restarted, restarted_options = Frontend(false, index.disk.server)
-    Eq(#restarted.writes, 0, "fresh session does not migrate again")
-    local bee, hive, box = Settings.ReadOptions(restarted_options, false)
-    Triple(bee, hive, box, { true, false, true })
-end
-do
-    local index, options = Frontend(false)
-    local a, b, c = index:UpdateConfigurationOptions(options, Saved(false), false, "tail")
-    Triple(a, b, c, { "original", nil, "tail" })
-    Eq(#index.writes, 1, "subsequent load migrates once")
-    Eq(Record(options, keys[2]).saved, false, "vanilla hive retained")
-    Eq(Record(options, keys[3]).saved, false, "vanilla box retained")
-    index:UpdateConfigurationOptions(options, Saved(false, true, false), false)
-    Eq(#index.writes, 1, "manual boolean preferences not overwritten or resaved")
-    Eq(Record(options, keys[2]).saved, true, "new independent hive preference retained")
-end
-do
-    local index, options = Frontend(true)
-    index:UpdateConfigurationOptions(options, Saved("bee"), false)
-    index:UpdateConfigurationOptions(options, Saved("bee"), false)
-    Eq(#index.writes, 1, "pending save not duplicated")
-    index.pending()
-    Eq(#index.writes, 1, "reload after async save does not recurse")
-    index:UpdateConfigurationOptions(options, Saved("killerbee"), true)
-    Eq(#index.writes, 2, "client file migrated separately")
-    index.pending()
-    Eq(Record(options, keys[2]).saved_client, false, "client hive value migrated")
 end
 
 -- 執行實際 config.lua 與 bees.lua，確認新布林值能驅動原來的 Prefab hooks。
@@ -239,4 +135,4 @@ for _, profile in ipairs(legacy_profiles) do
     end
 end
 
-print("PASS: " .. assertions .. " assertions for menus, migration, legacy overrides, independent preferences and frontend saves")
+print("PASS: " .. assertions .. " assertions for boolean menus, unchanged legacy data, independent preferences and runtime hooks")

@@ -31,7 +31,7 @@ local LANGS = {
             { modid .. '_rocky', '石虾', '不含面具石虾', true, onof_zh },
             { modid .. '_monkey', '穴居猴', '', true, onof_zh },
             { "蜜蜂相關" },
-            { modid .. '_bee', '蜜蜂', '控制普通蜜蜂和杀人蜂的仇恨传播，不含嗡嗡蜜蜂；蜂巢和蜂箱独立设置', true, onof_zh },
+            { modid .. '_bee', '蜜蜂', '控制普通蜜蜂和杀人蜂的仇恨传播，不含嗡嗡蜜蜂；从1.0.1更新后请重新选择蜜蜂、蜂巢、蜂箱三项并保存，旧值可能显示N/A', true, onof_zh },
             { modid .. '_beehive', '蜂巢', '普通野生蜂巢的放蜂反应，也包含巢外蜜蜂被攻击或捕捉；不影响杀人蜂巢', true, {
                 { '原版', false, "放出有仇恨的杀人蜂" },
                 { '无仇恨蜜蜂', true, "放出无仇恨的普通蜜蜂" },
@@ -61,7 +61,7 @@ local LANGS = {
         description =
         'Removes the group aggro mechanics from creatures like Frogs, Beefalos, Pigmen, and Pengulls.\nEach creature can be toggled individually. Does not affect followers hired by players.\nNote: This does not change the active aggro range of creatures. Therefore, the effect might be less noticeable for actively hostile creatures with large aggro radii (e.g., Merms, Guard Pigs, Mutated Pengulls, Charged Lightning Goats) unless you use ranged weapons.',
         config = {
-            { modid .. '_bee', 'Bees', 'Controls aggro sharing from regular and Killer Bees, excluding Grumble Bees; hives and boxes are configured independently', true, onof_en },
+            { modid .. '_bee', 'Bees', 'Controls aggro sharing from regular and Killer Bees, excluding Grumble Bees; after updating from 1.0.1, reselect and save all three bee settings; old values may display N/A', true, onof_en },
             { modid .. '_beehive', 'Bee Hives', 'Only regular wild hives, excluding Killer Bee Hives; also controls releases when their bees are attacked or netted', true, {
                 { 'Vanilla', false, "Preserve vanilla releases: attacking a hive releases aggressive Killer Bees" },
                 { 'Untargeted Bees', true, "Release regular bees without an aggro target; outdoor aggro sharing is controlled by Bees" },
