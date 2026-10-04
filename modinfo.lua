@@ -36,7 +36,19 @@ local LANGS = {
                 { '安全蜂箱', true, "采蜜不放蜂，其他放蜂反应不指定仇恨目标；巢外蜂群由蜜蜂选项控制" },
             } },
             { modid .. '_frog', '青蛙', '包含明眼青蛙', true, onof_zh },
-            -- { modid .. '_spider', '蜘蛛', '包含各种蜘蛛', true, onof_zh },
+            { modid .. '_spider', '蜘蛛互相援助', '包含八种蜘蛛；只移除野生蜘蛛的受击援助，玩家蜘蛛保留原版，女王子蛛由女王设置控制', true, onof_zh },
+            { modid .. '_spider_nest_help', '蜘蛛呼叫蛛巢', '移除受击蜘蛛呼叫附近蛛巢增援；保留玩家蜘蛛及面具蜘蛛的呼叫，实际放蛛由巢穴防卫设置控制', true, onof_zh },
+            { modid .. '_spider_nest_defense', '蛛巢防卫', '包含各级普通巢、岩穴、月岛巢和海黽巢繭；控制攻击、采掘、剃巢、作祟、着火的防卫，不影响毁巢后的原版无目标逸出', "untargeted", {
+                { '原版', "vanilla", "保留原版防卫放蛛和目标传递" },
+                { '无目标出蛛', "untargeted", "保留防卫出蛛数量与种类，不传入仇恨或调查位置；蜘蛛仍可自行索敌" },
+                { '停止防卫出蛛', "disabled", "防卫反应不生成蜘蛛、不扣巢内库存；正常出巢、吹哨与毁巢逸出保留" },
+            } },
+            { modid .. '_spider_nest_alarm', '蛛网警报', '包含各类巢穴踩网、砍蜘蛛网蘑菇树，以及海黽巢繭的激活警报；与巢穴防卫独立', "vanilla", {
+                { '原版', "vanilla", "保留警报出蛛及原版目标或调查位置" },
+                { '无目标出蛛', "untargeted", "保留警报出蛛，不传入仇恨或调查位置；保留调查者数量限制，蜘蛛仍可自行索敌" },
+                { '停止警报出蛛', "disabled", "不因警报生成蜘蛛；防卫、日常出巢、吹哨及海黽捕鱼独立运作" },
+            } },
+            { modid .. '_spiderqueen', '蜘蛛女王', '移除女王间援助、对子蛛的目标指派、新生子蛛继承目标及子蛛互相援助；保留产子、跟随与单体战斗', true, onof_zh },
             { modid .. '_beefalo', '皮弗娄牛', '包含小皮弗娄牛', true, onof_zh },
             { modid .. '_pigman', '猪人', '包含猪人守卫和疯猪，不含面具猪人', true, onof_zh },
             { modid .. '_bunnyman', '兔人', '不含舒适兔人、皇家兔子警卫和面具兔人', true, onof_zh },
@@ -69,7 +81,19 @@ local LANGS = {
                 { 'Safe Bee Boxes', true, "No bees released on harvest; other releases have no aggro target; outdoor aggro sharing is controlled by Bees" },
             } },
             { modid .. '_frog', 'Frogs', 'Includes Bright-Eyed Frog', true, onof_en },
-            -- { modid .. '_spider', 'Spiders', 'Includes all spider variants', true, onof_en },
+            { modid .. '_spider', 'Spider Assistance', 'All eight variants; disables wild spider hit assistance, preserves player spiders; queen minions follow the Queen setting', true, onof_en },
+            { modid .. '_spider_nest_help', 'Spider Calls to Nests', 'Stops attacked spiders calling nearby nests; preserves calls from player spiders and parasite hosts; nest releases follow Nest Defense', true, onof_en },
+            { modid .. '_spider_nest_defense', 'Spider Nest Defense', 'Regular dens, Spilagmites, Shattered Spider Holes and Oceanvine Cocoons: attacks, mining, shaving, haunting and ignition; preserves vanilla untargeted escapes on destruction', "untargeted", {
+                { 'Vanilla', "vanilla", "Preserve defensive releases and target assignments" },
+                { 'Untargeted Releases', "untargeted", "Preserve defensive numbers and types without combat targets or investigation positions; spiders can still acquire targets themselves" },
+                { 'No Defensive Releases', "disabled", "No defensive spawning or stock consumption; preserve routine releases, whistle summons and destruction escapes" },
+            } },
+            { modid .. '_spider_nest_alarm', 'Spider Web Alarms', 'Nest web triggers, chopping Webbed Mushtrees and Oceanvine Cocoon activation alarms; independent of Nest Defense', "vanilla", {
+                { 'Vanilla', "vanilla", "Preserve alarm spawning and target or investigation assignments" },
+                { 'Untargeted Releases', "untargeted", "Preserve alarm spawning without targets or investigation positions; retain investigator limits; spiders can still acquire targets themselves" },
+                { 'No Alarm Releases', "disabled", "No alarm spawning; defense, routine releases, whistle summons and fishing remain independent" },
+            } },
+            { modid .. '_spiderqueen', 'Spider Queens', 'Stops queen assistance, leader target assignments, newborn target inheritance and minion assistance; preserves births, following and individual combat', true, onof_en },
             { modid .. '_beefalo', 'Beefalos', 'Includes Baby Beefalos', true, onof_en },
             { modid .. '_pigman', 'Pigmen', 'Includes Guard Pigs and Werepigs, excludes Enthralled Pigmen', true, onof_en },
             { modid .. '_bunnyman', 'Bunnymen', 'Excludes Cozy Bunnymen, Royal Rabbit Enforcer, and Enthralled Bunnymen', true, onof_en },
@@ -87,7 +111,7 @@ local LANGS = {
 local cur = (locale == 'zh' or locale == 'zhr' or locale == 'zht') and 'zh' or 'en'
 
 -- mod相关信息
-version = '1.0.1'
+version = '1.1.0'
 author = 'Icya'
 forumthread = ''
 api_version = 10
