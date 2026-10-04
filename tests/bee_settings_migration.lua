@@ -1,6 +1,4 @@
 -- 從 MOD 目錄執行：lua tests/bee_settings_migration.lua
-package.path = "scripts/?.lua;" .. package.path
-local Settings = require("no_group_aggro/bee_settings")
 local keys = { "no_group_aggro_bee", "no_group_aggro_beehive", "no_group_aggro_beebox" }
 local assertions = 0
 local function Eq(actual, expected, message)
@@ -18,6 +16,20 @@ local function Load(path, environment)
     end
     fn()
     return environment
+end
+local function ReadOptions(options, is_map)
+    local environment = {
+        GLOBAL = {
+            type = type, pairs = pairs,
+            KnownModIndex = { GetModConfigurationOptions_Internal = function() return options, is_map end },
+        },
+        modname = "test_mod",
+        no_group_aggro = { modid = "no_group_aggro" },
+        GetModConfigData = function() return false end,
+    }
+    environment.env = environment
+    local config = Load("scripts/no_group_aggro/config.lua", environment).no_group_aggro.config
+    return config.bee, config.beehive, config.beebox
 end
 local function Definitions(locale)
     return Load("modinfo.lua", { locale = locale or "en" }).configuration_options
@@ -50,7 +62,7 @@ for _, locale in ipairs({ "en", "zh", "zhr", "zht" }) do
         Eq(option.options[1].data, false, "vanilla value")
         Eq(option.options[2].data, true, "enabled value")
     end
-    local bee, hive, box = Settings.ReadOptions(definitions, false)
+    local bee, hive, box = ReadOptions(definitions, false)
     Triple(bee, hive, box, { true, true, true })
 end
 
@@ -64,7 +76,7 @@ for _, bee in ipairs({ false, true }) do
     for _, hive in ipairs({ false, true }) do
         for _, box in ipairs({ false, true }) do
             local raw = Saved(bee, hive, box)
-            local a, b, c = Settings.ReadOptions(raw, false)
+            local a, b, c = ReadOptions(raw, false)
             Triple(a, b, c, { bee, hive, box })
         end
     end
@@ -72,21 +84,21 @@ end
 
 -- 舊 dedicated override 是字典，列表則區分 default 與 saved。
 for _, profile in ipairs(legacy_profiles) do
-    local a, b, c = Settings.ReadOptions({ [keys[1]] = profile[1] }, true)
+    local a, b, c = ReadOptions({ [keys[1]] = profile[1] }, true)
     Triple(a, b, c, { profile[2], profile[3], profile[4] })
     local options = Definitions()
     Record(options, keys[1]).saved = profile[1]
-    a, b, c = Settings.ReadOptions(options, false)
+    a, b, c = ReadOptions(options, false)
     Triple(a, b, c, { profile[2], profile[3], profile[4] })
     Eq(Record(options, keys[1]).saved, profile[1], "read does not rewrite old saved value")
 end
 do
-    local a, b, c = Settings.ReadOptions({}, true)
+    local a, b, c = ReadOptions({}, true)
     Triple(a, b, c, { false, false, false })
     local options = Definitions()
     Record(options, keys[1]).saved = false
     Record(options, keys[1]).saved_server = "killerbee"
-    a, b, c = Settings.ReadOptions(options, false)
+    a, b, c = ReadOptions(options, false)
     Triple(a, b, c, { true, false, true })
 end
 
@@ -95,7 +107,7 @@ for _, profile in ipairs(legacy_profiles) do
     for _, master in ipairs({ false, true }) do
         local raw = { [keys[1]] = profile[1] }
         local environment = {
-            GLOBAL = { KnownModIndex = { GetModConfigurationOptions_Internal = function() return raw, true end } },
+            GLOBAL = { type = type, pairs = pairs, KnownModIndex = { GetModConfigurationOptions_Internal = function() return raw, true end } },
             modname = "test_mod",
             no_group_aggro = { modid = "no_group_aggro" },
             GetModConfigData = function() return false end,
