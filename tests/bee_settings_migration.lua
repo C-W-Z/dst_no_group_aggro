@@ -17,20 +17,29 @@ local function Load(path, environment)
     fn()
     return environment
 end
-local function ReadOptions(options, is_map)
+-- 模擬原版 GetModConfigData：已儲存值優先，沒有時回傳 default。
+local function ConfigEnvironment(options, is_map)
     local environment = {
-        GLOBAL = {
-            type = type, pairs = pairs,
-            KnownModIndex = { GetModConfigurationOptions_Internal = function() return options, is_map end },
-        },
-        modname = "test_mod",
         no_group_aggro = { modid = "no_group_aggro" },
-        GetModConfigData = function() return false end,
+        GetModConfigData = function(name)
+            if is_map then return options[name] end
+            for _, option in pairs(options) do
+                if option.name == name then
+                    if option.saved_server ~= nil then return option.saved_server end
+                    if option.saved ~= nil then return option.saved end
+                    return option.default
+                end
+            end
+        end,
     }
     environment.env = environment
-    local config = Load("scripts/no_group_aggro/config.lua", environment).no_group_aggro.config
+    return environment
+end
+local function ReadOptions(options, is_map)
+    local config = Load("scripts/no_group_aggro/config.lua", ConfigEnvironment(options, is_map)).no_group_aggro.config
     return config.bee, config.beehive, config.beebox
 end
+
 local function Definitions(locale)
     return Load("modinfo.lua", { locale = locale or "en" }).configuration_options
 end
@@ -67,11 +76,11 @@ for _, locale in ipairs({ "en", "zh", "zhr", "zht" }) do
 end
 
 local legacy_profiles = {
-    { false, false, false, false },
+    { false, false, true, true },
     { "bee", true, true, true },
     { "killerbee", true, false, true },
 }
--- 新版三個布林值須原樣保留，不能在重開後再次繼承或重設。
+-- 新版三個布林值須原樣保留。
 for _, bee in ipairs({ false, true }) do
     for _, hive in ipairs({ false, true }) do
         for _, box in ipairs({ false, true }) do
@@ -82,10 +91,24 @@ for _, bee in ipairs({ false, true }) do
     end
 end
 
--- 舊 dedicated override 是字典，列表則區分 default 與 saved。
+-- 舊字串搭配已儲存的新選項：蜂箱保留 false，蜂巢僅受 killerbee 特例影響。
+for _, legacy in ipairs({ "bee", "killerbee" }) do
+    for _, hive in ipairs({ false, true }) do
+        for _, box in ipairs({ false, true }) do
+            local expected_hive = hive
+            if legacy == "killerbee" then expected_hive = false end
+            local a, b, c = ReadOptions(Saved(legacy, hive, box), false)
+            Triple(a, b, c, { true, expected_hive, box })
+        end
+    end
+end
+
+-- 舊字串只轉換蜜蜂；killerbee 關閉蜂巢，其餘值及缺省值不受影響。
 for _, profile in ipairs(legacy_profiles) do
+    local expected_hive = nil
+    if profile[1] == "killerbee" then expected_hive = false end
     local a, b, c = ReadOptions({ [keys[1]] = profile[1] }, true)
-    Triple(a, b, c, { profile[2], profile[3], profile[4] })
+    Triple(a, b, c, { profile[2], expected_hive, nil })
     local options = Definitions()
     Record(options, keys[1]).saved = profile[1]
     a, b, c = ReadOptions(options, false)
@@ -94,7 +117,7 @@ for _, profile in ipairs(legacy_profiles) do
 end
 do
     local a, b, c = ReadOptions({}, true)
-    Triple(a, b, c, { false, false, false })
+    Triple(a, b, c, { false, nil, nil })
     local options = Definitions()
     Record(options, keys[1]).saved = false
     Record(options, keys[1]).saved_server = "killerbee"
@@ -105,15 +128,9 @@ end
 -- 執行實際 config.lua 與 bees.lua，確認新布林值能驅動原來的 Prefab hooks。
 for _, profile in ipairs(legacy_profiles) do
     for _, master in ipairs({ false, true }) do
-        local raw = { [keys[1]] = profile[1] }
-        local environment = {
-            GLOBAL = { type = type, pairs = pairs, KnownModIndex = { GetModConfigurationOptions_Internal = function() return raw, true end } },
-            modname = "test_mod",
-            no_group_aggro = { modid = "no_group_aggro" },
-            GetModConfigData = function() return false end,
-            TheWorld = { ismastersim = master },
-        }
-        environment.env = environment
+        local raw = { [keys[1]] = profile[1], [keys[2]] = true, [keys[3]] = true }
+        local environment = ConfigEnvironment(raw, true)
+        environment.TheWorld = { ismastersim = master }
         Load("scripts/no_group_aggro/config.lua", environment)
         local config = environment.no_group_aggro.config
         Triple(config.bee, config.beehive, config.beebox, { profile[2], profile[3], profile[4] })
@@ -147,4 +164,4 @@ for _, profile in ipairs(legacy_profiles) do
     end
 end
 
-print("PASS: " .. assertions .. " assertions for boolean menus, unchanged legacy data, independent preferences and runtime hooks")
+print("PASS: " .. assertions .. " assertions for boolean menus, unchanged legacy data, killerbee hive override, independent preferences and runtime hooks")
