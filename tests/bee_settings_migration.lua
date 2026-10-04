@@ -19,6 +19,29 @@ local function Load(path, environment)
     fn()
     return environment
 end
+-- 模擬原版 GetModConfigData 的儲存值優先順序，執行實際 config.lua。
+local function ConfigEnvironment(options, is_map)
+    local environment = {
+        no_group_aggro = { modid = "no_group_aggro" },
+        GetModConfigData = function(name)
+            if is_map then return options[name] end
+            for _, option in pairs(options) do
+                if option.name == name then
+                    if option.saved_server ~= nil then return option.saved_server end
+                    if option.saved ~= nil then return option.saved end
+                    return option.default
+                end
+            end
+        end,
+    }
+    environment.env = environment
+    return environment
+end
+local function ReadOptions(options, is_map)
+    local config = Load("scripts/no_group_aggro/config.lua", ConfigEnvironment(options, is_map)).no_group_aggro.config
+    return config.bee, config.beehive, config.beebox
+end
+
 local function Definitions(locale)
     return Load("modinfo.lua", { locale = locale or "en" }).configuration_options
 end
@@ -50,7 +73,7 @@ for _, locale in ipairs({ "en", "zh", "zhr", "zht" }) do
         Eq(option.options[1].data, false, "vanilla value")
         Eq(option.options[2].data, true, "enabled value")
     end
-    local bee, hive, box = Settings.ReadOptions(definitions, false)
+    local bee, hive, box = ReadOptions(definitions, false)
     Triple(bee, hive, box, { true, true, true })
     Eq(Settings.Migrate(definitions, definitions, false), nil, "new installation needs no write")
 end
@@ -85,29 +108,43 @@ for _, bee in ipairs({ false, true }) do
             local definitions = Definitions()
             local raw = Saved(bee, hive, box)
             Eq(Settings.Migrate(definitions, raw, false), nil, "modern settings unchanged")
-            local a, b, c = Settings.ReadOptions(raw, false)
+            local a, b, c = ReadOptions(raw, false)
             Triple(a, b, c, { bee, hive, box })
         end
     end
 end
 
+-- 現代布林值即使只有部分儲存，也不補寫；舊字串已有獨立選項時保留。
+Eq(Settings.Migrate(Definitions(), Saved(true), false), nil, "modern partial settings unchanged")
+Eq(Settings.Migrate(Definitions(), Saved(false, true), false), nil, "modern partial false settings unchanged")
+for _, hive in ipairs({ false, true }) do
+    for _, box in ipairs({ false, true }) do
+        local definitions = Definitions()
+        local migrated = assert(Settings.Migrate(definitions, Saved("killerbee", hive, box), false))
+        Eq(Record(migrated, keys[2]).saved, hive, "explicit hive choice preserved")
+        Eq(Record(migrated, keys[3]).saved, box, "explicit box choice preserved")
+        Eq(Settings.Migrate(definitions, migrated, false), nil, "explicit choices not migrated again")
+    end
+end
+
 -- 舊 dedicated override 是字典，列表則區分 default 與 saved。
 for _, profile in ipairs(legacy_profiles) do
-    local a, b, c = Settings.ReadOptions({ [keys[1]] = profile[1] }, true)
+    local a, b, c = ReadOptions({ [keys[1]] = profile[1] }, true)
     Triple(a, b, c, { profile[2], profile[3], profile[4] })
     local options = Definitions()
     Record(options, keys[1]).saved = profile[1]
-    a, b, c = Settings.ReadOptions(options, false)
+    assert(Settings.Migrate(options, Saved(profile[1]), false))
+    a, b, c = ReadOptions(options, false)
     Triple(a, b, c, { profile[2], profile[3], profile[4] })
 end
 do
-    local a, b, c = Settings.ReadOptions({}, true)
+    local a, b, c = ReadOptions({}, true)
     Triple(a, b, c, { false, false, false })
     local options = Definitions()
     Record(options, keys[1]).saved = false
-    Record(options, keys[1]).saved_server = "killerbee"
-    a, b, c = Settings.ReadOptions(options, false)
-    Triple(a, b, c, { true, false, true })
+    Record(options, keys[1]).saved_server = true
+    a, b, c = ReadOptions(options, false)
+    Triple(a, b, c, { true, true, true })
 end
 
 local function Frontend(deferred, initial)
@@ -167,7 +204,7 @@ do
     -- 全新的 index／包裝狀態，模擬重開遊戲後讀取已遷移的設定檔。
     local restarted, restarted_options = Frontend(false, index.disk.server)
     Eq(#restarted.writes, 0, "fresh session does not migrate again")
-    local bee, hive, box = Settings.ReadOptions(restarted_options, false)
+    local bee, hive, box = ReadOptions(restarted_options, false)
     Triple(bee, hive, box, { true, false, true })
 end
 do
@@ -198,14 +235,8 @@ end
 for _, profile in ipairs(legacy_profiles) do
     for _, master in ipairs({ false, true }) do
         local raw = { [keys[1]] = profile[1] }
-        local environment = {
-            GLOBAL = { KnownModIndex = { GetModConfigurationOptions_Internal = function() return raw, true end } },
-            modname = "test_mod",
-            no_group_aggro = { modid = "no_group_aggro" },
-            GetModConfigData = function() return false end,
-            TheWorld = { ismastersim = master },
-        }
-        environment.env = environment
+        local environment = ConfigEnvironment(raw, true)
+        environment.TheWorld = { ismastersim = master }
         Load("scripts/no_group_aggro/config.lua", environment)
         local config = environment.no_group_aggro.config
         Triple(config.bee, config.beehive, config.beebox, { profile[2], profile[3], profile[4] })

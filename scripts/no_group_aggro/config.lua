@@ -1,15 +1,13 @@
 -- 集中讀取設定；保留舊存檔的繼承與缺省行為。
 local modid = env.no_group_aggro.modid
----@type string
-local modname = env.modname
 local BeeSettings = require("no_group_aggro/bee_settings")
-local options, is_map = GLOBAL.KnownModIndex:GetModConfigurationOptions_Internal(modname)
-local bee, beehive, beebox = BeeSettings.ReadOptions(options, is_map)
 local function Read(suffix, default)
     local value = GetModConfigData(modid .. suffix)
     if value == nil then return default end
     return value
 end
+
+local bee, beehive, beebox = BeeSettings.Resolve(Read("_bee"), Read("_beehive"), Read("_beebox"))
 
 local config = {
     frog = Read("_frog"),
