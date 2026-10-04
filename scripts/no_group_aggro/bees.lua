@@ -16,7 +16,7 @@ if config.bee then
 end
 
 -- 蜂巢獨立決定放出的蜂種與目標，包括巢外蜜蜂受擊／捕捉時的放蜂請求。
-if config.beehive == "bee" then
+if config.beehive then
     AddPrefabPostInit("beehive", function(inst)
         if not TheWorld.ismastersim then return end
         if inst.components.childspawner then
