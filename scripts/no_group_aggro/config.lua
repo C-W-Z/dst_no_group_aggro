@@ -1,21 +1,19 @@
--- 集中讀取設定；只相容舊蜜蜂字串，不改寫儲存值。
+-- 集中讀取設定；保留舊存檔的繼承與缺省行為。
 local modid = env.no_group_aggro.modid
+local BeeSettings = require("no_group_aggro/bee_settings")
 local function Read(suffix, default)
     local value = GetModConfigData(modid .. suffix)
     if value == nil then return default end
     return value
 end
 
--- N/A 的舊字串仍可直接讀取；只有舊 killerbee 會覆蓋蜂巢行為。
-local bee = Read("_bee")
-local beehive = Read("_beehive")
-if bee == "killerbee" then beehive = false end
+local bee, beehive, beebox = BeeSettings.Resolve(Read("_bee"), Read("_beehive"), Read("_beebox"))
 
 local config = {
     frog = Read("_frog"),
-    bee = bee == true or bee == "bee" or bee == "killerbee",
+    bee = bee,
     beehive = beehive,
-    beebox = Read("_beebox"),
+    beebox = beebox,
     spider = Read("_spider", true),
     spider_nest_help = Read("_spider_nest_help", true),
     spider_nest_defense = Read("_spider_nest_defense", "untargeted"),
